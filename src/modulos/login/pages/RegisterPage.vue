@@ -1,5 +1,5 @@
 <template>
-  <div class="auth-page-container fullscreen flex column justify-between">
+  <div class="auth-page-container flex column no-wrap justify-between">
     <!-- Capa de fondo con imagen cinemática de carretera y gradiente azul oscuro -->
     <div class="background-backdrop" />
 
@@ -12,6 +12,9 @@
     <main class="auth-main-section flex flex-center q-pb-xl">
       <AuthCard title="Crear cuenta" subtitle="Registra tus datos para comenzar.">
         <form @submit.prevent="handleRegisterSubmit">
+          <div v-if="errorMessage" role="alert" class="text-negative q-mb-md">
+            {{ errorMessage }}
+          </div>
           <!-- Campo Nombre Completo -->
           <AuthInput
             v-model="form.nombre"
@@ -100,7 +103,7 @@ import AuthCard from '../components/AuthCard.vue';
 import AuthInput from '../components/AuthInput.vue';
 import { useRegister } from '../composables/useRegister';
 
-const { form, isLoading, submitRegister } = useRegister();
+const { form, isLoading, errorMessage, submitRegister } = useRegister();
 
 async function handleRegisterSubmit() {
   await submitRegister();
@@ -111,7 +114,7 @@ async function handleRegisterSubmit() {
 .auth-page-container {
   position: relative;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   background-color: #0b1329;

@@ -1,5 +1,5 @@
 <template>
-  <div class="auth-page-container fullscreen flex column justify-between">
+  <div class="auth-page-container flex column no-wrap justify-between">
     <!-- Capa de fondo con imagen cinemática de carretera y gradiente azul oscuro -->
     <div class="background-backdrop" />
 
@@ -87,7 +87,7 @@ async function handleLoginSubmit() {
 .auth-page-container {
   position: relative;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   background-color: #0b1329;

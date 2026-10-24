@@ -223,6 +223,25 @@
             :completo="movimiento.estado === 'TERMINADO'"
             :ultimo-id="ultimoId"
           />
+          <table v-if="totalesPorTipo.length" class="movement-type-totals">
+            <caption>
+              Totales por tipo
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Tipo</th>
+                <th scope="col">Peso</th>
+                <th scope="col">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="total in totalesPorTipo" :key="total.tipo" :data-tipo="total.tipo">
+                <th scope="row">{{ nombres[total.tipo] }}</th>
+                <td>{{ formatPeso(total.peso) }} kg</td>
+                <td>{{ total.valor === null ? 'Sin precio' : soles(total.valor) }}</td>
+              </tr>
+            </tbody>
+          </table>
           <div class="weights-grand-total">
             <span>Total</span><strong>{{ formatPeso(pesoTotal) }} <small>kg</small></strong>
           </div>
@@ -348,6 +367,23 @@ const nombre = computed(
 );
 const paquetes = computed(() => (movimiento.value ? paquetesMovimiento(movimiento.value) : []));
 const pesoTotal = computed(() => paquetes.value.reduce((s, p) => s + p.peso_c, 0));
+const totalesPorTipo = computed(() =>
+  tipos
+    .map((tipo) => {
+      const items = paquetes.value.filter((p) => p.tipo === tipo);
+      const precio = movimiento.value?.precios[tipo];
+      return {
+        tipo,
+        cantidad: items.length,
+        peso: items.reduce((sum, p) => sum + p.peso_c, 0),
+        valor:
+          precio === undefined
+            ? null
+            : items.reduce((sum, p) => sum + costoPaquete(p.peso_c, precio), 0),
+      };
+    })
+    .filter((total) => total.cantidad > 0),
+);
 const resultado = computed(() => ganancia(paquetes.value, data.value.movimientos, true));
 const tipo = ref<TipoHuevo>('R');
 const granja = ref('');
@@ -700,6 +736,32 @@ async function exportar(formato: 'pdf' | 'xlsx') {
   padding-top: 8px;
   font-size: 16px;
   font-weight: 600;
+}
+.movement-type-totals {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.movement-type-totals caption {
+  text-align: left;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 0;
+}
+.movement-type-totals th,
+.movement-type-totals td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--ksm-border);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.movement-type-totals th:first-child {
+  text-align: left;
+}
+.movement-type-totals thead th {
+  color: var(--ksm-muted);
 }
 .weights-grand-total strong {
   font-size: 24px;
