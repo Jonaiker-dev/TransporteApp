@@ -13,6 +13,12 @@ export default defineConfig((/* ctx */) => {
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     boot: [],
 
+    sourceFiles: {
+      pwaRegisterServiceWorker: 'src-pwa/register-sw',
+      pwaServiceWorker: 'src-pwa/sw/custom-sw',
+      pwaManifestFile: 'src-pwa/manifest.json',
+    },
+
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.css'],
 
@@ -31,6 +37,10 @@ export default defineConfig((/* ctx */) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
+      defineEnv: {
+        SUPABASE_URL: import.meta.env.SUPABASE_URL ?? '',
+        SUPABASE_ANON_KEY: import.meta.env.SUPABASE_ANON_KEY ?? '',
+      },
       target: {
         // browser: 'baseline-widely-available',
         // node: 'node22'
@@ -81,7 +91,7 @@ export default defineConfig((/* ctx */) => {
     devServer: {
       // vueDevtools: true,
       // https: true,
-      open: true, // opens browser window automatically
+      open: false, // opens browser window automatically
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
@@ -99,7 +109,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify'],
     },
 
     // animations: 'all', // --- includes all animations
@@ -173,15 +183,11 @@ export default defineConfig((/* ctx */) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.json',
-      // extendPWAManifestJson (json) {},
-      // useCredentialsForManifestTag: true,
-      // injectPWAMetaTags: false,
-      // extendPWACustomSWConf (rolldownConf) {},
-      // extendPWAGenerateSWOptions (cfg) {},
-      // extendPWAInjectManifestOptions (cfg) {},
+      workboxMode: 'InjectManifest',
+      extendPWAInjectManifestOptions(cfg) {
+        cfg.globPatterns = ['**/*.{css,html,ico,js,mjs,png,jpg,jpeg,svg,woff,woff2}'];
+        cfg.maximumFileSizeToCacheInBytes = 5 * 1024 * 1024;
+      },
       // extendPWASwTsConfig (tsConfig) {}
     },
 

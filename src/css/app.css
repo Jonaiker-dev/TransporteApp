@@ -1,1 +1,368 @@
 /* app global css */
+:root {
+  --ksm-space-1: 4px;
+  --ksm-space-2: 8px;
+  --ksm-space-3: 12px;
+  --ksm-space-4: 16px;
+  --ksm-space-6: 24px;
+  --ksm-space-8: 32px;
+  --ksm-radius-control: 4px;
+  --ksm-radius-card: 8px;
+  --ksm-touch-min: 48px;
+  --ksm-key-height: 56px;
+  --ksm-column-width: 112px;
+  --ksm-font-body: 1rem;
+  --ksm-font-small: 0.875rem;
+  --ksm-font-title: 1.5rem;
+  --ksm-font-key: 1.75rem;
+  --ksm-font-display: 3rem;
+}
+
+:root,
+body.body--light {
+  color-scheme: light;
+  --ksm-surface: #f3f4f6;
+  --ksm-card: #fff;
+  --ksm-soft: #f3f4f6;
+  --ksm-text: #111827;
+  --ksm-muted: #374151;
+  --ksm-border: #64748b;
+  --ksm-primary: #124d94;
+  --ksm-on-solid: #fff;
+  --ksm-positive: #166534;
+  --ksm-positive-bg: #dcfce7;
+  --ksm-negative: #991b1b;
+  --ksm-negative-bg: #fee2e2;
+  --ksm-warning: #854d0e;
+  --ksm-warning-bg: #fef3c7;
+  --egg-r: #9d174d;
+  --egg-r-bg: #fce7f3;
+  --egg-p: #713f12;
+  --egg-p-bg: #fef3c7;
+  --egg-j: #115e59;
+  --egg-j-bg: #ccfbf1;
+  --ksm-pressed: #dbeafe;
+  --ksm-disabled-bg: #e5e7eb;
+  --ksm-disabled-text: #374151;
+}
+.ksm-content {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+.ksm-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8rem;
+}
+.ksm-table th,
+.ksm-table td {
+  padding: 10px 6px;
+  text-align: right;
+  border-bottom: 1px solid var(--ksm-border);
+}
+.ksm-table th:first-child,
+.ksm-table td:first-child {
+  text-align: left;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.q-item--clickable {
+  min-height: var(--ksm-touch-min);
+}
+.back-link {
+  min-height: var(--ksm-touch-min);
+  align-items: center;
+}
+body .text-grey-6,
+body .text-grey-5,
+body .text-grey-7 {
+  color: var(--ksm-muted) !important;
+}
+.ida-badge .text-primary {
+  color: #1259a1 !important;
+}
+body .text-orange-9 {
+  color: var(--ksm-warning) !important;
+}
+body .content-wrapper .records-badge {
+  color: var(--ksm-muted);
+}
+.body--dark {
+  color-scheme: dark;
+  --ksm-surface: #111827;
+  --ksm-card: #1f2937;
+  --ksm-soft: #293548;
+  --ksm-text: #f9fafb;
+  --ksm-muted: #d1d5db;
+  --ksm-border: #94a3b8;
+  --ksm-primary: #a8ceff;
+  --ksm-on-solid: #111827;
+  --ksm-positive: #86efac;
+  --ksm-positive-bg: #153323;
+  --ksm-negative: #fca5a5;
+  --ksm-negative-bg: #451a1a;
+  --ksm-warning: #fde68a;
+  --ksm-warning-bg: #422f12;
+  --egg-r: #f9a8d4;
+  --egg-r-bg: #431b32;
+  --egg-p: #fcd68a;
+  --egg-p-bg: #3e2c16;
+  --egg-j: #80e5d7;
+  --egg-j-bg: #123d3a;
+  --ksm-pressed: #334155;
+  --ksm-disabled-bg: #374151;
+  --ksm-disabled-text: #d1d5db;
+  background: var(--ksm-surface);
+  color: var(--ksm-text);
+}
+.body--dark .bg-white,
+.body--dark .app-top-header,
+.body--dark .metric-box,
+.body--dark .metric-card,
+.body--dark .bg-surface,
+.body--dark .bg-grey-1,
+.body--dark .bg-grey-2,
+.body--dark .price-input-box,
+.body--dark .date-input-box {
+  background: var(--ksm-card) !important;
+}
+.body--dark .text-grey-9,
+.body--dark .text-grey-10,
+.body--dark .text-grey-8,
+.body--dark .route-city,
+.body--dark .header-brand-title,
+.body--dark .trip-card-title,
+.body--dark .section-title,
+.body--dark input {
+  color: var(--ksm-text) !important;
+}
+.body--dark .text-grey-7,
+.body--dark .text-grey-6 {
+  color: var(--ksm-muted) !important;
+}
+.body--dark .q-chip.text-grey-10 {
+  color: #0f172a !important;
+}
+.body--dark .text-orange-9 {
+  color: var(--ksm-warning) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Resolve aliases on the themed element, rather than on :root. */
+body.body--light,
+body.body--dark {
+  --q-primary: var(--ksm-primary);
+  --q-secondary: var(--ksm-muted);
+  --q-accent: var(--egg-j);
+  --q-positive: var(--ksm-positive);
+  --q-negative: var(--ksm-negative);
+  --q-info: var(--ksm-primary);
+  --q-warning: var(--ksm-warning);
+  --q-dark: #1f2937;
+  --q-dark-page: #111827;
+  background: var(--ksm-surface);
+  color: var(--ksm-text);
+}
+
+/* Quasar filled brand controls need dark text with the dark palette. */
+body
+  .q-badge:is(
+    .bg-primary,
+    .bg-secondary,
+    .bg-accent,
+    .bg-positive,
+    .bg-negative,
+    .bg-info,
+    .bg-warning
+  ),
+body
+  .q-chip:is(
+    .bg-primary,
+    .bg-secondary,
+    .bg-accent,
+    .bg-positive,
+    .bg-negative,
+    .bg-info,
+    .bg-warning
+  ),
+.ksm-solid {
+  color: var(--ksm-on-solid) !important;
+}
+
+.ksm-number {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ksm-touch {
+  min-inline-size: var(--ksm-touch-min);
+  min-block-size: var(--ksm-touch-min);
+}
+.ksm-key {
+  min-block-size: var(--ksm-key-height);
+}
+.ksm-touch:focus-visible {
+  outline: 3px solid var(--ksm-primary);
+  outline-offset: 3px;
+}
+.ksm-status-positive {
+  color: var(--ksm-positive);
+  background: var(--ksm-positive-bg);
+}
+.ksm-status-negative {
+  color: var(--ksm-negative);
+  background: var(--ksm-negative-bg);
+}
+.ksm-status-warning {
+  color: var(--ksm-warning);
+  background: var(--ksm-warning-bg);
+}
+
+/* Operational screens: solid surfaces and readable controls. */
+body:is(.body--light, .body--dark) :is(summary, input):focus-visible {
+  outline: 3px solid var(--ksm-primary);
+  outline-offset: 3px;
+}
+body:is(.body--light, .body--dark)
+  :is(.bottom-submit-container, .bottom-actions-container, .mobile-bottom-bar) {
+  box-shadow: none;
+  border-top: 1px solid var(--ksm-border);
+}
+body:is(.body--light, .body--dark)
+  :is(.home-page-container, .viaje-page, .compra-page, .venta-page)
+  .text-caption {
+  font-size: 14px;
+  line-height: 20px;
+}
+body:is(.body--light, .body--dark) :is(.date-input-box, .price-input-box) {
+  min-height: 48px;
+  background: var(--ksm-soft);
+  border-color: var(--ksm-border);
+  border-radius: var(--ksm-radius-control);
+}
+body:is(.body--light, .body--dark)
+  :is(.native-date-input, .native-price-input, .native-text-input) {
+  font-size: 16px;
+  min-height: 48px;
+  color: var(--ksm-text);
+  font-variant-numeric: tabular-nums;
+}
+body:is(.body--light, .body--dark)
+  :is(.native-date-input, .native-price-input, .native-text-input)::placeholder {
+  color: var(--ksm-muted);
+  opacity: 1;
+}
+body:is(.body--light, .body--dark) :is(.field-label, .help-caption, .checkbox-subtext) {
+  font-size: 14px;
+  line-height: 20px;
+}
+body:is(.body--light, .body--dark) .checkbox-block .q-checkbox {
+  min-height: 48px;
+}
+body:is(.body--light, .body--dark) .header-logo-box {
+  background: var(--ksm-primary);
+  color: var(--ksm-on-solid);
+  box-shadow: none !important;
+  border-radius: var(--ksm-radius-control);
+}
+body:is(.body--light, .body--dark) .header-logo-box .q-icon {
+  color: var(--ksm-on-solid) !important;
+}
+body:is(.body--light, .body--dark) .home-page-container .history-detail {
+  font-size: 14px;
+  line-height: 20px;
+}
+body:is(.body--light, .body--dark) .home-page-container .trip-card > .row.q-col-gutter-xs > .col-4,
+body:is(.body--light, .body--dark) .viaje-page .viaje-card > .row.q-col-gutter-sm > .col-4 {
+  width: 100%;
+}
+body:is(.body--light, .body--dark) .home-page-container .metric-box,
+body:is(.body--light, .body--dark) .viaje-page .metric-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 64px;
+  gap: 0 8px;
+  text-align: left;
+}
+body:is(.body--light, .body--dark) .home-page-container .metric-icon-circle {
+  display: none;
+}
+body:is(.body--light, .body--dark) :is(.home-page-container, .viaje-page) .metric-label {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  margin: 0;
+  font-size: 16px;
+  color: var(--ksm-muted);
+}
+body:is(.body--light, .body--dark) :is(.home-page-container, .viaje-page) .metric-value {
+  grid-column: 2;
+  font-size: 24px;
+  line-height: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+body:is(.body--light, .body--dark) :is(.home-page-container, .viaje-page) .metric-sub {
+  grid-column: 2;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: right;
+  color: var(--ksm-muted);
+}
+body:is(.body--light, .body--dark) .en-curso-badge {
+  color: var(--ksm-primary);
+  background: var(--ksm-soft);
+  border-radius: var(--ksm-radius-control);
+}
+body:is(.body--light, .body--dark) .q-field--outlined .q-field__control:before {
+  border-color: var(--ksm-border);
+}
+body:is(.body--light, .body--dark) .q-field--dense .q-field__control,
+body:is(.body--light, .body--dark) .q-field--dense .q-field__marginal {
+  min-height: 48px;
+}
+body:is(.body--light, .body--dark) .q-field__native {
+  font-size: 16px;
+}
+body:is(.body--light, .body--dark) .q-banner.bg-red-1 {
+  background: var(--ksm-negative-bg) !important;
+  color: var(--ksm-negative) !important;
+}
+body:is(.body--light, .body--dark) .q-banner.bg-amber-1 {
+  background: var(--ksm-warning-bg) !important;
+  color: var(--ksm-warning) !important;
+}
+body:is(.body--light, .body--dark) .ksm-table {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+body:is(.body--light, .body--dark) .ksm-table th,
+body:is(.body--light, .body--dark) .ksm-table td {
+  padding: 12px 8px;
+}
+body:is(.body--light, .body--dark) .ksm-table th:first-child,
+body:is(.body--light, .body--dark) .ksm-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--ksm-card);
+}
+
+body:is(.body--light, .body--dark) :is(.date-input-box, .price-input-box) {
+  height: auto;
+  min-height: 52px;
+}
+body:is(.body--light, .body--dark) .input-block .field-label.ellipsis {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  min-height: 40px;
+}

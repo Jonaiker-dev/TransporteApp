@@ -1,0 +1,35 @@
+// Base tokens. Runtime theme aliases live in app.css.
+$primary: #124d94;
+$secondary: #374151;
+$accent: #115e59;
+$dark: #1f2937;
+$dark-page: #111827;
+$positive: #166534;
+$negative: #991b1b;
+$info: #124d94;
+$warning: #854d0e;
+
+$typography-font-family: 'Roboto', Arial, sans-serif;
+$generic-border-radius: 8px;
+$button-border-radius: 4px;
+$button-font-size: 16px;
+$button-font-weight: 600;
+
+// Shared UI contract. Only these components own button and card dimensions.
+$app-button-height-md: 48px;
+$app-button-height-lg: 56px;
+$app-button-radius: 4px;
+$app-button-border-width: 2px;
+$app-button-padding-x: 12px;
+$app-button-gap: 8px;
+$app-button-content-gap: 8px;
+$app-button-font-size: 16px;
+$app-button-line-height: 24px;
+$app-button-font-weight: 600;
+$app-button-icon-size: 24px;
+$app-button-stack-icon-size: 20px;
+$app-button-bar-padding: 12px;
+$app-button-nav-padding: 4px;
+$app-card-radius: 8px;
+$app-card-border-width: 1px;
+$app-card-padding: 16px;

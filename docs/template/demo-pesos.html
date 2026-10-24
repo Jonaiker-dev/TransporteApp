@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demo · Captura de pesos</title>
+<style>
+:root{
+  --bg:#f3f1ec;--surface:#fff;--text:#1d1b18;--muted:#6f6a62;--border:#dcd8cf;--ink:#1d1b18;--onink:#fff;
+  --R:#c2417a;--Rbg:#fbe6f0;--P:#8a5a2b;--Pbg:#f3e6d6;--J:#1f7a74;--Jbg:#dcf1ee;--ok:#2e7d32;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17160f;--surface:#23211a;--text:#f1eee6;--muted:#a39d90;--border:#3a372d;--ink:#f1eee6;--onink:#17160f;
+  --R:#f07ab0;--Rbg:#3d2230;--P:#d9a066;--Pbg:#3a2c1b;--J:#58cdc4;--Jbg:#1a3532;--ok:#7bd17f;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17160f;--surface:#23211a;--text:#f1eee6;--muted:#a39d90;--border:#3a372d;--ink:#f1eee6;--onink:#17160f;
+  --R:#f07ab0;--Rbg:#3d2230;--P:#d9a066;--Pbg:#3a2c1b;--J:#58cdc4;--Jbg:#1a3532;--ok:#7bd17f;color-scheme:dark}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+*,*:before,*:after{box-sizing:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.app{max-width:520px;margin:0 auto;padding:12px 12px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.top h1{font-size:18px;margin:0}
+.stat{font-size:13px;color:var(--muted);text-align:right;line-height:1.3}
+.stat b{color:var(--text)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.tab{padding:12px;border:2px solid var(--border);background:var(--surface);border-radius:10px;font-weight:700;font-size:15px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.type{padding:14px 4px;border-radius:10px;border:3px solid transparent;font-weight:800;font-size:16px}
+.type[data-t="R"]{background:var(--Rbg);color:var(--R)}
+.type[data-t="P"]{background:var(--Pbg);color:var(--P)}
+.type[data-t="J"]{background:var(--Jbg);color:var(--J)}
+.type[aria-pressed="true"]{border-color:currentColor}
+.type small{display:block;font-weight:600;font-size:12px;opacity:.85}
+.display{display:flex;align-items:baseline;justify-content:space-between;margin:12px 2px 8px}
+.display .val{font-size:52px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.display .unit{color:var(--muted);font-size:18px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.key{padding:16px 0;font-size:24px;font-weight:700;border-radius:10px;border:1px solid var(--border);background:var(--bg)}
+.key:active{background:var(--border)}
+.add{grid-column:span 2;background:var(--ink);color:var(--onink);border-color:var(--ink);font-size:18px}
+.row2{display:flex;gap:6px;margin-top:6px}
+.ghost{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;font-size:14px}
+h2{font-size:15px;margin:0 0 8px}
+.hint{font-size:13px;color:var(--muted);margin:0 0 8px;line-height:1.4}
+.block{margin-bottom:14px}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;margin-bottom:6px}
+.bhead.R{color:var(--R)}.bhead.P{color:var(--P)}.bhead.J{color:var(--J)}
+.bhead span{font-weight:600;font-size:13px;color:var(--muted)}
+.cols{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.col{min-width:64px;flex:0 0 auto;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-variant-numeric:tabular-nums}
+.col div{padding:3px 8px;font-size:14px;text-align:right;border-bottom:1px dashed var(--border);height:24px}
+.col div.n{background:var(--bg);color:var(--muted)}
+.col div.new{animation:flash .9s}
+.col .sub{font-weight:800;border:0;border-top:2px solid var(--text);background:var(--bg);height:auto;padding:5px 8px}
+@keyframes flash{from{background:var(--ink);color:var(--onink)}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.col div.new{animation:none}}
+.empty{color:var(--muted);font-size:14px;padding:6px 2px}
+.total{display:flex;justify-content:space-between;font-weight:800;font-size:17px;border-top:2px solid var(--text);padding-top:8px;margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:9px 10px;border-radius:8px;border:2px solid var(--border);background:var(--bg);font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;min-width:58px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.chip small{display:block;font-size:10px;font-weight:600;opacity:.7}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+input[type=text],input[type=number]{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px}
+.opts{border:1px solid var(--border);border-radius:10px;margin-top:4px;overflow:hidden}
+.opt{display:block;width:100%;text-align:left;padding:11px 12px;border:0;border-bottom:1px solid var(--border);background:var(--surface)}
+.opt:last-child{border-bottom:0}
+.opt.create{font-weight:700;color:var(--ok)}
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.prices input{padding:10px;font-size:15px}
+.big{width:100%;padding:16px;border-radius:12px;border:0;background:var(--ok);color:#fff;font-weight:800;font-size:17px}
+.big:disabled{opacity:.4;cursor:not-allowed}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--onink);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.sale{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--border)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12px;padding:4px}
+
+.app{padding-bottom:110px}
+.lotrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
+.lot{flex:0 0 auto;padding:10px 14px;border-radius:999px;border:2px solid var(--border);background:var(--bg);font-weight:700;font-size:14px}
+.lot[aria-pressed="true"]{background:var(--ink);color:var(--onink);border-color:var(--ink)}
+.take{border-top:1px solid var(--border);padding:10px 0}
+.th{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:13px;color:var(--muted)}
+.th b:first-child{font-size:16px}.th.R b:first-child{color:var(--R)}.th.P b:first-child{color:var(--P)}.th.J b:first-child{color:var(--J)}
+.th span b{color:var(--text)}
+.tr{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tr input{width:76px;padding:11px 8px;text-align:center}
+.go{padding:11px 16px;border-radius:10px;border:0;background:var(--ink);color:var(--onink);font-weight:800}
+.pre{padding:11px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-weight:700}
+details summary{cursor:pointer;font-weight:700;font-size:15px;padding:4px 0}
+.bar{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:2px solid var(--ink);z-index:5}
+.bi{font-size:14px;line-height:1.35}
+.big.sm{width:auto;flex:0 0 auto;padding:14px 18px;font-size:16px}
+.last{font-size:14px;color:var(--muted);margin:-2px 2px 10px}
+.last b{color:var(--text)}
+.auto{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:12px 0 0;line-height:1.35}
+.auto input{width:20px;height:20px;margin:0;flex:0 0 auto}
+.key{padding:18px 0}
+.miss{color:#c62828;font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .miss{color:#ff8a80}}
+.mov{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.mh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:16px}
+.ms{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4}
+.tag{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border)}
+.tag.live{background:var(--Jbg);color:var(--J);border-color:transparent}
+.tag.done{color:var(--muted)}
+.amb{margin:-2px 2px 10px;padding:10px;border:2px solid var(--ink);border-radius:10px;font-size:14px}
+.tabs{margin-top:8px}
+.ghost{color:var(--muted);opacity:.55;font-weight:700}
+.ghostbtn{width:100%;margin-top:6px;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;font-size:14px}
+.chip small{font-size:11px;font-weight:800;opacity:.9}
+.pad .add{grid-column:span 2}
+.hero{border:2px solid var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.kpi{background:var(--bg);border-radius:10px;padding:9px 8px;text-align:center}
+.kpi small{display:block;font-size:12px;color:var(--muted)}
+.kpi b{display:block;font-size:19px;font-variant-numeric:tabular-nums;margin:2px 0}
+.kpi span{font-size:11px;color:var(--muted)}
+.alert{background:var(--Pbg);color:var(--P);border-radius:10px;padding:11px 12px;font-size:14px;margin-bottom:12px;line-height:1.4;font-weight:600}
+.sec{font-size:15px;margin:18px 2px 8px}
+.sync{border:1px solid var(--border);background:var(--Pbg);color:var(--P);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700}
+.sync.ok{background:var(--Jbg);color:var(--J);border-color:transparent}
+.big.alt{background:var(--ink);color:var(--onink)}
+.bar .big:not(.sm){flex:1}
+.tb{width:100%;border-collapse:collapse;font-size:13px;text-align:center;font-variant-numeric:tabular-nums}
+.tb th,.tb td{padding:7px 4px;border-bottom:1px dashed var(--border);vertical-align:top}
+.tb th:first-child{text-align:left}
+.tb small{color:var(--muted)}
+.gain{color:var(--ok)}
+.loss{color:#c62828}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .loss{color:#ff8a80}}
+:root[data-theme="dark"] .loss{color:#ff8a80}
+.res{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
+.rl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;padding:3px 0}
+.rl small{color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin-top:4px}
+.costh{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.bi small{font-weight:400;opacity:.8}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <h1>Chincha → Lima</h1>
+    <div class="stat" id="stat"></div>
+  </div>
+  <div id="view"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TYPES={R:'Rosado',P:'Pardo',J:'Jumbo'},ORDER=['R','P','J'];
+let seed=7;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+let uid=0,mid=0,clock=0;const pk=[],movs=[];
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fdate=d=>d.split('-').reverse().join('/');
+const noPrices=()=>({R:'',P:'',J:''});
+const trips=[{id:1,start:'2026-10-12',end:'2026-10-14',closed:true,fake:{buyN:132,buyKg:2998.4,sellN:128,sellKg:2910.6,money:15840.5,moves:5,gain:842.3,cost:14998.2,unk:0,invest:15100}},{id:2,start:'2026-10-16',end:null,closed:false}];
+function seedMov(party,spec,date,prices){
+  const m={id:++mid,kind:'C',date,party,prices:{...prices},hasW:true,closed:true,tripId:2};movs.push(m);
+  spec.forEach(([t,n])=>{for(let i=0;i<n;i++)pk.push({id:++uid,type:t,w:Math.round((17+rnd()*8)*100)/100,origin:party,buyMov:m.id,sellMov:null,sold:false})});
+  return m;
+}
+const mA=seedMov('Granja A',[['R',90],['P',55],['J',20]],'2026-10-16',{R:'7.60',P:'7.00',J:'8.00'});
+const mB=seedMov('Granja B',[['R',60],['P',70],['J',25]],'2026-10-16',{R:'7.80',P:'7.10',J:'8.10'});
+/* Dos rosados de 12.90 en la misma granja (A) y uno en la B, para probar duplicados */
+pk.push({id:++uid,type:'R',w:12.9,origin:'Granja A',buyMov:mA.id,sellMov:null,sold:false});
+pk.push({id:++uid,type:'R',w:12.9,origin:'Granja A',buyMov:mA.id,sellMov:null,sold:false});
+pk.push({id:++uid,type:'R',w:12.9,origin:'Granja B',buyMov:mB.id,sellMov:null,sold:false});
+
+(function(){const m={id:++mid,tripId:2,kind:'V',date:'2026-10-17',party:'Mercado Minorista',prices:{R:'8.90',P:'8.10',J:'7.80'},hasW:true,closed:true};movs.push(m);
+  [['R',40],['P',25],['J',8]].forEach(([t,n])=>{pk.filter(p=>p.type===t&&p.origin==='Granja A'&&!p.sellMov&&p.w!==12.9).slice(0,n).forEach(p=>{p.sellMov=m.id;p.selAt=++clock;p.sold=true})})})();
+let viewTrip=null,pending=0,statReady=false,autoDot=true,screen='home',cur=null,curType='R',buf='',auto=true,lastNewId=null,showAll=false,miss='',ambig=null,filtFarm='ALL';
+const farms=['Granja A','Granja B'],clients=['Mercado Minorista','Bodega Los Andes','Pollería El Sabor'];
+let form={};
+const resetForm=()=>{form={kind:'V',date:todayStr(),party:'',q:'',open:false,prices:noPrices(),hasW:true}};
+
+const fmt=n=>n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>'S/ '+n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const bufVal=()=>buf?(Math.round(parseFloat(buf)*100)/100||0):0;
+const kgOf=l=>l.reduce((a,p)=>a+p.w,0);
+const sumOf=(m,l)=>l.reduce((a,p)=>a+p.w*(parseFloat(m.prices[p.type])||0),0);
+const movById=id=>movs.find(m=>m.id===id);
+const costOf=p=>{if(!p.buyMov)return null;const c=parseFloat(movById(p.buyMov).prices[p.type]);return c?p.w*c:null};
+function profit(items,m){let rev=0,cost=0,unk=0;items.forEach(p=>{const pr=parseFloat(m.prices[p.type]),c=costOf(p);if(!pr||c===null){unk++;return}rev+=p.w*pr;cost+=c});return{rev,cost,gain:rev-cost,unk}}
+const avgCost=t=>{let c=0,k=0;pk.filter(p=>!p.sellMov&&p.type===t).forEach(p=>{const x=costOf(p);if(x!==null){c+=x;k+=p.w}});return k?c/k:0};
+const restCost=()=>pk.filter(p=>!p.sellMov).reduce((a,p)=>a+(costOf(p)||0),0);
+const sg=g=>(g>=0?'+':'−')+money(Math.abs(g));
+const gainHTML=(g,cost)=>`<b class="${g>=0?'gain':'loss'}">${sg(g)}</b>${cost?` <small>(${g>=0?'+':'−'}${(Math.abs(g)/cost*100).toFixed(1)}% sobre costo)</small>`:''}`;
+const resultBlock=(s,truck)=>`<div class="res">${s.money?`<div class="rl"><span>Vendido</span><b>${money(s.money)}</b></div>`:''}${s.cost?`<div class="rl"><span>Ganancia realizada</span><span>${gainHTML(s.gain,s.cost)}</span></div>`:''}${truck?`<div class="rl"><span>En camión, a costo</span><b>${money(restCost())}</b></div>`:`<div class="rl"><span>Invertido en compras</span><b>${money(s.invest)}</b></div>`}${s.unk?`<div class="note">* ${s.unk} paq. sin precio de compra o de venta no entran en la ganancia.</div>`:''}</div>`;
+function resultTable(ms){
+  const V=ms.filter(m=>m.kind==='V');
+  return `<div class="card"><h2>Resultado por tipo (S/)</h2><table class="tb"><tr><th></th><th>Venta</th><th>Costo</th><th>Ganancia</th></tr>`+ORDER.map(tp=>{
+    const r=V.reduce((a,m)=>{const x=profit(movItems(m).filter(p=>p.type===tp),m);return{rev:a.rev+x.rev,cost:a.cost+x.cost,gain:a.gain+x.gain}},{rev:0,cost:0,gain:0});
+    return `<tr><th class="bhead ${tp}">${TYPES[tp]}</th><td>${r.cost?fmt(r.rev):'—'}</td><td>${r.cost?fmt(r.cost):'—'}</td><td class="${r.gain>=0?'gain':'loss'}">${r.cost?(r.gain>=0?'+':'−')+fmt(Math.abs(r.gain)):'—'}</td></tr>`}).join('')+`</table></div>`;
+}
+const movItems=m=>m.kind==='C'?pk.filter(p=>p.buyMov===m.id):pk.filter(p=>p.sellMov===m.id).sort((a,b)=>a.selAt-b.selAt);
+const mode=()=>cur.kind==='C'?'C':(cur.hasW?'V':'VN');
+const farmOk=p=>p.origin===filtFarm;
+const pool=()=>pk.filter(p=>!p.sellMov&&p.type===curType&&farmOk(p));
+const left=t=>pk.filter(p=>!p.sellMov&&p.type===t&&farmOk(p)).length;
+const buzz=()=>{try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2400)}
+function paintSync(){$('stat').innerHTML=`<button class="sync ${pending?'':'ok'}" id="sync">${pending?pending+' cambios sin respaldar':'Todo respaldado'}</button>`}
+function stat(){if(statReady)pending++;statReady=true;paintSync()}
+$('stat').addEventListener('click',e=>{if(e.target.id==='sync'){pending=0;paintSync();toast('Respaldo enviado a Supabase (simulado)')}});
+
+/* Función pura: la misma para pantalla, PDF y Excel */
+function groupColumns(list0,size=10){
+  return ORDER.map(t=>{
+    const list=list0.filter(p=>p.type===t),cols=[];
+    for(let i=0;i<list.length;i+=size){const part=list.slice(i,i+size);cols.push({items:part,subtotal:kgOf(part)})}
+    return{type:t,cols,count:list.length,total:kgOf(list)};
+  });
+}
+function previewHTML(list,emptyMsg,m,compact){
+  if(!list.length)return `<div class="empty">${emptyMsg}</div>`;
+  let grand=0,sum=0,html='';
+  groupColumns(list).forEach(b=>{
+    if(!b.count)return;
+    grand+=b.total;const pr=m?(parseFloat(m.prices[b.type])||0):0;sum+=b.total*pr;
+    const cols=compact&&!showAll?b.cols.slice(-2):b.cols;
+    html+=`<div class="block"><div class="bhead ${b.type}">${TYPES[b.type]}<span>${b.count} paq. · ${fmt(b.total)} kg${pr?' · '+money(b.total*pr):''}</span></div><div class="cols">`+
+      cols.map(c=>`<div class="col">`+Array.from({length:10},(_,i)=>{const p=c.items[i];return p?`<div class="${p.id===lastNewId?'new':''}">${fmt(p.w)}</div>`:`<div class="n">&nbsp;</div>`}).join('')+`<div class="sub">${fmt(c.subtotal)}</div></div>`).join('')+`</div></div>`;
+  });
+  return html+`<div class="total"><span>Total</span><span>${fmt(grand)} kg${sum?' · '+money(sum):''}</span></div>`;
+}
+
+/* ---------- Viajes: inicio, detalle y cierre ---------- */
+const activeTrip=()=>trips.find(t=>!t.closed);
+const daysBetween=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
+function tripStats(t){
+  if(t.fake)return t.fake;
+  const ms=movs.filter(m=>m.tripId===t.id),V=ms.filter(m=>m.kind==='V');
+  const C=ms.filter(m=>m.kind==='C').flatMap(movItems),S=V.flatMap(movItems);
+  const pf=V.reduce((a,m)=>{const r=profit(movItems(m),m);return{gain:a.gain+r.gain,cost:a.cost+r.cost,unk:a.unk+r.unk}},{gain:0,cost:0,unk:0});
+  const inv=ms.filter(m=>m.kind==='C').reduce((a,m)=>a+movItems(m).reduce((x,p)=>x+(costOf(p)||0),0),0);
+  return{buyN:C.length,buyKg:kgOf(C),sellN:S.length,sellKg:kgOf(S),money:V.reduce((a,m)=>a+sumOf(m,movItems(m)),0),moves:ms.length,gain:pf.gain,cost:pf.cost,unk:pf.unk,invest:inv};
+}
+function movCard(m){
+  const l=movItems(m),pr=sumOf(m,l),g=m.kind==='V'?profit(l,m):null;
+  return `<button class="mov" data-m="${m.id}"><div class="mh"><b>${m.kind==='C'?'Compra':'Venta'} · ${esc(m.party)}</b><span class="tag ${m.closed?'done':'live'}">${m.closed?'Terminado':'En curso'}</span></div>
+  <div class="ms">${fdate(m.date)} · ${l.length} paq. · ${fmt(kgOf(l))} kg${pr?' · '+money(pr):''}${m.kind==='V'&&!m.hasW?' · sin pesos de compra':''}${g&&g.cost?' · <b class="'+(g.gain>=0?'gain':'loss')+'">'+sg(g.gain)+'</b>':''}</div></button>`;
+}
+function tripCard(t){
+  const s=tripStats(t);
+  return `<button class="mov" data-trip="${t.id}"><div class="mh"><b>Viaje ${fdate(t.start)}${t.end&&t.end!==t.start?' al '+fdate(t.end):''}</b><span class="tag done">Cerrado</span></div>
+  <div class="ms">Compró ${fmt(s.buyKg)} kg · Vendió ${fmt(s.sellKg)} kg${s.money?' · '+money(s.money):''}${s.cost?' · <b class="'+(s.gain>=0?'gain':'loss')+'">'+sg(s.gain)+'</b>':''}</div></button>`;
+}
+const kpiHTML=(s,rest)=>`<div class="kpis"><div class="kpi"><small>Comprado</small><b>${fmt(s.buyKg)}</b><span>kg · ${s.buyN} paq.</span></div>
+  <div class="kpi"><small>Vendido</small><b>${fmt(s.sellKg)}</b><span>kg · ${s.sellN} paq.</span></div>
+  ${rest?`<div class="kpi"><small>En camión</small><b>${fmt(kgOf(rest))}</b><span>kg · ${rest.length} paq.</span></div>`:`<div class="kpi"><small>Movimientos</small><b>${s.moves}</b><span>en el viaje</span></div>`}</div>`;
+
+function renderHome(){
+  const t=activeTrip(),rest=pk.filter(p=>!p.sellMov),past=trips.filter(x=>x.closed).reverse();
+  let h='';
+  if(t){
+    const s=tripStats(t),day=daysBetween(t.start,todayStr())+1,live=movs.filter(m=>m.tripId===t.id&&!m.closed);
+    h+=`<div class="card hero"><div class="mh"><b>Viaje en curso</b><span class="tag live">Día ${day}</span></div>
+    <div class="ms">Chincha → Lima · inicio ${fdate(t.start)} · ${s.moves} movimientos</div>${kpiHTML(s,rest)}
+    ${resultBlock(s,true)}
+    <button class="big alt" data-trip="${t.id}" style="margin-top:12px">Continuar viaje</button>
+    <div class="tr" style="margin-top:8px"><button class="ghostbtn" data-quick="C" style="flex:1;margin:0">+ Compra</button><button class="ghostbtn" data-quick="V" style="flex:1;margin:0">+ Venta</button></div></div>`;
+    if(day>=3)h+=`<div class="alert">Este viaje lleva ${day} días abierto. Si ya terminó, ciérralo para revisar el cuadre.</div>`;
+    if(live.length)h+=`<h2 class="sec">Pendientes de terminar</h2>`+live.map(movCard).join('');
+  }else h+=`<div class="card hero"><b>No hay viaje en curso</b><p class="hint" style="margin:6px 0 12px">Inicia un viaje para registrar las compras y ventas de la ruta Chincha → Lima.</p><button class="big" id="startTrip">Iniciar viaje</button></div>`;
+  h+=`<div class="card"><h2>En el camión ahora</h2>`+ORDER.map(tp=>{const l=rest.filter(p=>p.type===tp);return `<div class="bhead ${tp}" style="margin:8px 0 0">${TYPES[tp]}<span>${l.length} paq. · ${fmt(kgOf(l))} kg</span></div>`}).join('')+`</div>`;
+  if(t){const last=movs.filter(m=>m.tripId===t.id&&m.closed).slice(-3).reverse();if(last.length)h+=`<h2 class="sec">Últimos movimientos</h2>`+last.map(movCard).join('')}
+  if(past.length)h+=`<h2 class="sec">Viajes anteriores</h2>`+past.map(tripCard).join('');
+  $('view').innerHTML=h;
+}
+function renderTrip(){
+  const t=viewTrip,s=tripStats(t),ms=movs.filter(m=>m.tripId===t.id);
+  $('view').innerHTML=`<button class="link" id="back" style="font-size:14px">← Inicio</button>
+  <div class="card" style="margin-top:6px"><div class="mh"><b>Viaje ${fdate(t.start)}${t.end&&t.end!==t.start?' al '+fdate(t.end):''}</b><span class="tag ${t.closed?'done':'live'}">${t.closed?'Cerrado':'En curso'}</span></div>${kpiHTML(s,null)}
+  ${resultBlock(s,false)}</div>
+  <h2 class="sec">Movimientos</h2>${[...ms].reverse().map(movCard).join('')||'<div class="empty">Este viaje solo conserva su resumen en la demo.</div>'}
+  ${!t.closed?`<div class="bar"><button class="big" id="new">Nuevo movimiento</button><button class="big sm alt" id="closeTrip">Cerrar viaje</button></div>`
+   :!activeTrip()?`<div class="bar"><button class="big alt" id="reopen">Reabrir este viaje</button></div>`:''}`;
+}
+function renderClose(){
+  const t=viewTrip,ms=movs.filter(m=>m.tripId===t.id),live=ms.filter(m=>!m.closed),rest=pk.filter(p=>!p.sellMov);
+  const C=ms.filter(m=>m.kind==='C').flatMap(movItems),S=ms.filter(m=>m.kind==='V').flatMap(movItems);
+  const cell=l=>`${l.length} paq.<br><small>${fmt(kgOf(l))} kg</small>`;
+  $('view').innerHTML=`<button class="link" id="back" style="font-size:14px">← Volver al viaje</button>
+  <h2 style="font-size:17px;margin-top:6px">Cerrar viaje</h2>
+  ${live.length?`<div class="alert">Hay ${live.length} movimiento${live.length>1?'s':''} sin terminar. Termínalos para poder cerrar el viaje.</div>${live.map(movCard).join('')}`:''}
+  <div class="card"><h2>Cuadre por tipo</h2><table class="tb"><tr><th></th><th>Compra</th><th>Venta</th><th>Quedan</th></tr>
+  ${ORDER.map(tp=>`<tr><th class="bhead ${tp}">${TYPES[tp]}</th><td>${cell(C.filter(p=>p.type===tp))}</td><td>${cell(S.filter(p=>p.type===tp))}</td><td>${cell(rest.filter(p=>p.type===tp))}</td></tr>`).join('')}</table>
+  <p class="hint" style="margin-top:10px">Los ${rest.length} paquetes (${fmt(kgOf(rest))} kg) que quedan seguirán en el camión y estarán disponibles en el próximo viaje. Su costo (${money(restCost())}) se descuenta cuando se vendan: la ganancia o pérdida de esos paquetes se verá en el viaje donde se vendan.</p></div>
+  ${resultTable(ms)}
+  <div class="bar"><button class="big" id="doClose" ${live.length?'disabled':''}>Cerrar viaje</button></div>`;
+}
+
+/* ---------- Pantalla 2: crear movimiento ---------- */
+function renderForm(kf){
+  const isC=form.kind==='C',src=isC?farms:clients,q=form.q.trim().toLowerCase();
+  const matches=src.filter(c=>c.toLowerCase().includes(q)),exact=src.some(c=>c.toLowerCase()===q);
+  $('view').innerHTML=`<button class="link" id="back" style="font-size:14px">← Cancelar</button><h2 style="font-size:17px;margin-top:6px">Nuevo movimiento</h2>
+  <div class="tabs"><button class="tab" data-kind="V" aria-selected="${!isC}">Venta en Lima</button><button class="tab" data-kind="C" aria-selected="${isC}">Compra en granja</button></div>
+  <div class="card">
+    <label for="fd">Fecha</label><input type="date" id="fd" value="${form.date}">
+    <label for="cl" style="margin-top:12px">${isC?'Granja':'Cliente'}</label>
+    <input type="text" id="cl" autocomplete="off" placeholder="Busca o escribe un nombre nuevo" value="${esc(form.open?form.q:form.party||form.q)}">
+    ${form.open?`<div class="opts">${matches.map(c=>`<button class="opt" data-c="${esc(c)}">${esc(c)}</button>`).join('')}${q&&!exact?`<button class="opt create" data-new="1">Crear “${esc(form.q.trim())}”</button>`:''}</div>`:''}
+    <div class="prices">${ORDER.map(t=>`<div><label for="pr${t}">${TYPES[t]} S/ kg</label><input type="number" inputmode="decimal" step="0.01" id="pr${t}" data-pr="${t}" value="${form.prices[t]}" placeholder="0.00">${isC?'':`<small class="costh">costo ≈ ${avgCost(t)?fmt(avgCost(t)):'—'} /kg</small>`}</div>`).join('')}</div>
+    <p class="hint" style="margin-top:6px">${isC?'Precio de compra por kg (opcional).':'Precio de venta por kg de hoy.'}</p>
+    ${isC?'':`<label class="auto" style="margin-top:14px;font-size:15px"><input type="checkbox" id="hw" ${form.hasW?'checked':''}> ¿Tienes registrados los pesos de la compra?</label>
+    <p class="hint" style="margin:6px 0 0 28px">Si no, la venta se anota con el teclado y cada peso queda registrado directamente como vendido.</p>`}
+  </div>
+  <div class="bar"><button class="big" id="create" ${form.party?'':'disabled'}>${form.party?'Crear y empezar a anotar':'Elige '+(isC?'una granja':'un cliente')}</button></div>`;
+  if(kf){const i=$('cl');i.focus();i.setSelectionRange(i.value.length,i.value.length)}
+}
+
+/* ---------- Pantalla 3: captura de pesos ---------- */
+function dispHTML(){
+  if(!buf)return '<span class="ghost">00.00</span>';
+  const dec=buf.split('.')[1];
+  const g=dec===undefined?'.00':'0'.repeat(2-dec.length);
+  return esc(buf)+`<span class="ghost">${g}</span>`;
+}
+function padHTML(){
+  const it=movItems(cur),last=it[it.length-1],md=mode();
+  return `<div class="card">
+    <div class="types">${ORDER.map(t=>`<button class="type" data-t="${t}" aria-pressed="${t===curType}">${TYPES[t]}<small>${md==='V'?'quedan '+left(t):it.filter(p=>p.type===t).length+' paq.'}</small></button>`).join('')}</div>
+    <div class="display"><span class="val">${dispHTML()}</span><span class="unit">kg · ${TYPES[curType]}</span></div>
+    <div class="last">${miss?`<span class="miss">${esc(miss)}</span>`:last?`Último: <b>${fmt(last.w)} kg</b> · ${TYPES[last.type]}${md==='V'?' · '+esc(last.origin):''}`:md==='V'?'Escribe el peso de la etiqueta y se marca solo.':'Aún sin pesos'}</div>
+    <div class="pad">
+      ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-k="${n}">${n}</button>`).join('')}
+      <button class="key" data-k=".">.</button><button class="key" data-k="0">0</button><button class="key" data-k="back" aria-label="Borrar">⌫</button>
+      <button class="key" data-k="clear">C</button><button class="key add" data-k="add">${md==='V'?'Marcar':'Agregar'}</button>
+    </div>
+    <button class="ghostbtn" data-k="undo">Deshacer último</button>
+    <label class="auto"><input type="checkbox" id="auto" ${auto?'checked':''}> ${md==='V'?'Marcar':'Agregar'} solo al escribir los 2 decimales</label>
+    <label class="auto"><input type="checkbox" id="adot" ${autoDot?'checked':''}> Poner el punto solo tras 2 enteros (21 → 21.)</label>
+  </div>`;
+}
+function renderCap(){
+  const md=mode(),it=movItems(cur),kg=kgOf(it),pr=sumOf(cur,it),gp=cur.kind==='V'?profit(it,cur):null;
+  const head=`<button class="link" id="back" style="font-size:14px">← Movimientos</button>
+  <div class="card" style="margin-top:6px"><div class="mh"><b>${cur.kind==='C'?'Compra':'Venta'} · ${esc(cur.party)}</b><span class="tag ${cur.closed?'done':'live'}">${cur.closed?'Terminado':'En curso'}</span></div>
+  <div class="ms">${fdate(cur.date)}${ORDER.filter(t=>cur.prices[t]).map(t=>' · '+TYPES[t]+' S/ '+cur.prices[t]).join('')}${md==='VN'?' · sin pesos de compra':''}</div></div>`;
+  if(cur.closed){$('view').innerHTML=head+`<div class="card"><h2>Detalle</h2>${previewHTML(it,'Sin pesos.',cur,false)}</div>`;return}
+  let farm='',chips='';
+  if(md==='V'){
+    const un=pk.filter(p=>!p.sellMov),av=pool().sort((a,b)=>a.w-b.w||a.id-b.id);
+    const list=buf?av.filter(p=>p.w.toFixed(2).startsWith(buf)):av;
+    const groups=[];list.forEach(p=>{const g=groups[groups.length-1];if(g&&g.w===p.w)g.n++;else groups.push({w:p.w,n:1,id:p.id})});
+    const mk=it.slice(-8).reverse();
+    farm=`<div class="card"><label>Granja de origen</label><div class="lotrow">${farms.map(f=>`<button class="lot" data-farm="${esc(f)}" aria-pressed="${filtFarm===f}">${esc(f)} · ${un.filter(p=>p.origin===f).length}</button>`).join('')}</div></div>`;
+    chips=(mk.length?`<div class="card"><h2>Marcados en esta venta · ${it.length}</h2><p class="hint">Toca uno para quitarlo si te equivocaste.</p><div class="chips">${mk.map(p=>`<button class="chip" data-un="${p.id}" aria-pressed="true">${fmt(p.w)}<small>${TYPES[p.type]}</small></button>`).join('')}</div></div>`:'')+
+    `<div class="card"><h2>${TYPES[curType]} en ${esc(filtFarm)} · ${list.length}${buf?' con “'+esc(buf)+'…”':''}</h2><p class="hint">Un “×2” indica pesos repetidos: al marcar se toma primero el de la compra más antigua.</p>
+    <div class="chips">${groups.slice(0,60).map(g=>`<button class="chip" data-id="${g.id}" aria-pressed="false">${fmt(g.w)}${g.n>1?`<small>×${g.n}</small>`:''}</button>`).join('')||'<div class="empty">Nada con ese filtro.</div>'}</div>${groups.length>60?`<p class="hint" style="margin-top:8px">Se muestran 60 de ${groups.length}. Sigue escribiendo para acotar.</p>`:''}</div>`;
+  }
+  
+$('view').innerHTML=head+farm+padHTML()+chips+
+  `<div class="card"><h2>${cur.kind==='C'?'Compra':'Venta'} <button class="link" id="tgl">${showAll?'Solo últimas columnas':'Ver todas las columnas'}</button></h2>${previewHTML(it,'Aún no hay pesos.',cur,true)}</div>
+  <div class="bar"><div class="bi"><b>${it.length}</b> paq · <b>${fmt(kg)}</b> kg${pr?'<br>'+money(pr):''}${gp&&gp.cost?'<br>Ganancia '+gainHTML(gp.gain,gp.cost):''}</div>
+  <button class="big sm" id="finish" ${it.length?'':'disabled'}>${cur.kind==='C'?'Terminar compra':'Confirmar venta'}</button></div>`;
+}
+
+/* ---------- Lógica de captura ---------- */
+function assign(p){p.sellMov=cur.id;p.selAt=++clock;buf='';miss='';lastNewId=p.id;buzz();
+  const pr=parseFloat(cur.prices[p.type]),c=costOf(p);if(pr&&c!==null&&p.w*pr<c)toast('Ojo: este paquete se vende por debajo de su costo');
+  render();stat()}
+function addWeight(){
+  const v=bufVal();if(!v){toast('Escribe un peso primero');return}
+  const ref=pk.filter(x=>x.type===curType).map(x=>x.w).sort((a,b)=>a-b);
+  if(ref.length>=10){const med=ref[ref.length>>1];if(Math.abs(v-med)/med>0.3)toast('Revisa: '+fmt(v)+' se aleja de lo usual (≈'+fmt(med)+')')}
+  const p={id:++uid,type:curType,w:v,sold:false,selAt:++clock};
+  if(cur.kind==='C'){p.origin=cur.party;p.buyMov=cur.id;p.sellMov=null}else{p.origin='Sin registro';p.buyMov=null;p.sellMov=cur.id}
+  pk.push(p);lastNewId=p.id;buf='';buzz();render();stat();
+}
+function tryMatch(){
+  const w=bufVal();if(!w){toast('Escribe un peso primero');return}
+  const c=pool().filter(p=>Math.abs(p.w-w)<0.001).sort((a,b)=>a.id-b.id);
+  if(c.length){
+    assign(c[0]);
+    const n=movItems(cur).filter(p=>p.type===curType&&Math.abs(p.w-w)<0.001).length;
+    if(n>1)toast(`Ya van ${n} de ${fmt(w)} kg en esta venta · quedan ${c.length-1}`);
+    return;
+  }
+  const same=pk.filter(p=>p.type===curType&&p.origin===filtFarm&&Math.abs(p.w-w)<0.001);
+  const mine=same.filter(p=>p.sellMov===cur.id).length;
+  if(mine)miss=`Ya marcaste los ${mine} de ${fmt(w)} kg de ${TYPES[curType]} en ${filtFarm}. No quedan más.`;
+  else if(same.length)miss=`Los ${same.length} de ${fmt(w)} kg de ${filtFarm} ya se vendieron en otro movimiento.`;
+  else{const o=pk.find(p=>!p.sellMov&&p.type===curType&&Math.abs(p.w-w)<0.001);miss=`No hay ${fmt(w)} kg de ${TYPES[curType]} en ${filtFarm}.`+(o?' Existe en '+o.origin+'.':' Revisa el peso o el tipo.')}
+  render();
+}
+const commit=()=>mode()==='V'?tryMatch():addWeight();
+function typeDigit(d){
+  miss='';
+  if(d==='.'){if(buf.includes('.'))return;buf=buf?buf+'.':'0.';render();return}
+  const parts=buf.split('.');
+  if(buf.includes('.')){if(parts[1].length>=2)return}else if(parts[0].length>=3)return;
+  buf+=d;
+  if(autoDot&&!buf.includes('.')&&buf.length===2)buf+='.';
+  const dd=buf.split('.')[1];
+  if(auto&&dd&&dd.length===2)commit();else render();
+}
+function undo(){
+  const it=movItems(cur);if(!it.length){toast('Nada que deshacer');return}
+  const r=it[it.length-1];
+  if(mode()==='V')r.sellMov=null;else pk.splice(pk.indexOf(r),1);
+  lastNewId=null;toast('Se quitó '+fmt(r.w)+' kg');render();stat();
+}
+function finish(){
+  const it=movItems(cur);
+  if(cur.kind==='V')it.forEach(p=>p.sold=true);
+  cur.closed=true;toast((cur.kind==='C'?'Compra':'Venta')+' terminada: '+it.length+' registros');
+  screen='trip';render();stat();
+}
+const open=m=>{cur=m;viewTrip=trips.find(t=>t.id===m.tripId);screen='cap';buf='';miss='';curType='R';
+  filtFarm=farms.find(f=>pk.some(p=>!p.sellMov&&p.origin===f))||farms[0];render();window.scrollTo(0,0)};
+const render=()=>({home:renderHome,trip:renderTrip,close:renderClose,form:renderForm,cap:renderCap})[screen]();
+
+/* ---------- Eventos ---------- */
+const view=$('view');
+view.addEventListener('click',e=>{
+  const t=e.target,b=t.closest('button');if(!b)return;
+  const d=b.dataset;
+  if(b.id==='new'){resetForm();screen='form';render();return}
+  if(b.id==='startTrip'){const t={id:trips.length+1,start:todayStr(),end:null,closed:false};trips.push(t);viewTrip=t;screen='trip';toast('Viaje iniciado');stat();render();return}
+  if(d.trip){viewTrip=trips.find(x=>x.id==d.trip);screen='trip';render();window.scrollTo(0,0);return}
+  if(d.quick){viewTrip=activeTrip();resetForm();form.kind=d.quick;screen='form';render();return}
+  if(b.id==='closeTrip'){screen='close';render();return}
+  if(b.id==='doClose'){viewTrip.closed=true;viewTrip.end=todayStr();toast('Viaje cerrado');stat();screen='home';render();window.scrollTo(0,0);return}
+  if(b.id==='reopen'){viewTrip.closed=false;viewTrip.end=null;toast('Viaje reabierto');stat();render();return}
+  if(b.id==='back'){screen=({form:'trip',cap:'trip',trip:'home',close:'trip'})[screen]||'home';render();return}
+  if(d.m){open(movs.find(m=>m.id==d.m));return}
+  if(d.kind){form.kind=d.kind;form.party='';form.q='';form.open=false;render();return}
+  if(b.classList.contains('opt')){
+    form.party=d.new?form.q.trim():d.c;
+    if(d.new){const L=form.kind==='C'?farms:clients;if(!L.includes(form.party))L.push(form.party);toast('Creado: '+form.party)}
+    form.open=false;form.q='';render();return}
+  if(b.id==='create'){
+    const m={id:++mid,tripId:viewTrip.id,kind:form.kind,date:form.date,party:form.party,prices:{...form.prices},hasW:form.kind==='V'?form.hasW:true,closed:false};
+    movs.push(m);open(m);return}
+  if(b.id==='finish'){finish();return}
+  if(b.id==='tgl'){showAll=!showAll;render();return}
+  if(b.classList.contains('lot')){filtFarm=d.farm;miss='';render();return}
+  if(b.classList.contains('chip')){if(d.un){pk.find(x=>x.id==d.un).sellMov=null;lastNewId=null}else assign(pk.find(x=>x.id==d.id));render();stat();return}
+  if(b.classList.contains('type')){curType=d.t;miss='';render();return}
+  if(b.classList.contains('key')||b.classList.contains('ghostbtn')){
+    const k=d.k;
+    if(k==='add')commit();else if(k==='undo')undo();
+    else if(k==='clear'){buf='';miss='';render()}
+    else if(k==='back'){buf=buf.slice(0,-1);miss='';render()}
+    else typeDigit(k);
+  }
+});
+view.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='cl'){form.q=t.value;form.open=true;form.party='';renderForm(true)}
+  else if(t.dataset.pr)form.prices[t.dataset.pr]=t.value;
+});
+view.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='auto')auto=t.checked;
+  else if(t.id==='adot')autoDot=t.checked;
+  else if(t.id==='hw')form.hasW=t.checked;
+  else if(t.id==='fd')form.date=t.value;
+});
+view.addEventListener('focusin',e=>{if(e.target.id==='cl'&&!form.open){form.open=true;form.q='';renderForm(true)}});
+document.addEventListener('keydown',e=>{
+  if(screen!=='cap'||cur.closed||/INPUT/.test(document.activeElement.tagName))return;
+  if(/^[\d.,]$/.test(e.key))typeDigit(e.key===','?'.':e.key);
+  else if(e.key==='Backspace'){buf=buf.slice(0,-1);miss='';render()}
+  else if(e.key==='Enter')commit();
+});
+resetForm();stat();render();
+</script>
+</body>
+</html>

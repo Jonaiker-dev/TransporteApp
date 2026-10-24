@@ -1,0 +1,5 @@
+# Historical source kept verbatim and generated route declarations.
+docs/ai/referencias/prompt-original.md
+src/router/typed-router.d.ts
+# User-provided visual reference; preserve its original formatting.
+docs/template/demo-pesos.html

@@ -5,15 +5,11 @@
 
       <div class="text-h2" style="opacity: 0.4">Oops. Nothing here...</div>
 
-      <q-btn
-        class="q-mt-xl"
-        color="white"
-        text-color="blue"
-        unelevated
-        to="/"
-        label="Go Home"
-        no-caps
-      />
+      <AppButton to="/" label="Go Home" variant="primary" size="md" class="q-mt-xl" />
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import AppButton from '@/components/ui/AppButton.vue';
+</script>

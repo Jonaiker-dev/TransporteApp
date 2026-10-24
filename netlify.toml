@@ -1,0 +1,9 @@
+[build]
+  command = "npm ci --prefix src-pwa --include=dev && npm run build:pwa"
+  publish = "dist/pwa"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# Headers live in public/_headers for Git builds and manual uploads.
+# Hash routes (/#/...) do not require an HTML catch-all rewrite.
