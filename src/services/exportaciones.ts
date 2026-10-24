@@ -1,20 +1,84 @@
 import { snapshot } from '../repositories/transporte';
+import { Dialog } from 'quasar';
 
 import type { Movimiento, Paquete, TipoHuevo } from '../domain/model';
 
-export async function compartirArchivo(blob: Blob, nombre: string): Promise<void> {
+export async function compartirArchivo(
+  blob: Blob,
+  nombre: string,
+  compartirPdf = false,
+): Promise<void> {
+  const disponible =
+    typeof navigator.share === 'function' &&
+    navigator.canShare?.({ files: [new File([blob], nombre, { type: blob.type })] });
+  const elegido = await elegirNombre(
+    nombre,
+    compartirPdf && disponible ? 'Compartir' : 'Descargar',
+    compartirPdf
+      ? disponible
+        ? 'Elige el nombre. Después podrás seleccionar WhatsApp u otra aplicación del teléfono.'
+        : 'Este navegador no permite compartir este archivo. Puedes descargarlo con el nombre elegido y adjuntarlo en WhatsApp.'
+      : undefined,
+  );
+  if (!elegido) return;
+  nombre = elegido;
   const file = new File([blob], nombre, { type: blob.type });
-  if (navigator.canShare?.({ files: [file] })) {
+  if (disponible) {
     try {
       await navigator.share({ files: [file], title: 'Transportes K.S.M' });
       return;
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (compartirPdf)
+        throw new Error(
+          'No se pudo compartir el PDF. Puedes usar Descargar PDF o Exportar PDF y adjuntarlo en WhatsApp.',
+          { cause: err },
+        );
     }
   }
-  descargarArchivo(blob, nombre);
+  descargarConNombre(blob, nombre);
 }
-export function descargarArchivo(blob: Blob, nombre: string): void {
+export function nombreArchivo(texto: string, extension: string): string {
+  const limpio = texto
+    .trim()
+    .replace(/[<>:"/\\|?*]/g, '')
+    .split('')
+    .filter((char) => char.charCodeAt(0) >= 32)
+    .join('')
+    .replace(/[. ]+$/g, '');
+  const base = limpio.toLowerCase().endsWith(`.${extension}`)
+    ? limpio.slice(0, -(extension.length + 1)).trim()
+    : limpio;
+  return base && !/^\.+$/.test(base) ? `${base}.${extension}` : '';
+}
+function elegirNombre(
+  nombre: string,
+  accion = 'Descargar',
+  mensaje?: string,
+): Promise<string | null> {
+  const extension = nombre.split('.').at(-1)!;
+  return new Promise((resolve) => {
+    Dialog.create({
+      title: 'Nombre del documento',
+      message: mensaje ?? `El archivo se guardará como .${extension}`,
+      prompt: {
+        model: nombre.slice(0, -(extension.length + 1)),
+        type: 'text',
+        label: 'Nombre del documento',
+        isValid: (value: string) => Boolean(nombreArchivo(value, extension)),
+      },
+      ok: { label: accion },
+      cancel: { label: 'Cancelar', flat: true },
+    })
+      .onOk((value: string) => resolve(nombreArchivo(value, extension)))
+      .onCancel(() => resolve(null));
+  });
+}
+export async function descargarArchivo(blob: Blob, nombre: string): Promise<void> {
+  const elegido = await elegirNombre(nombre);
+  if (elegido) descargarConNombre(blob, elegido);
+}
+function descargarConNombre(blob: Blob, nombre: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -53,7 +117,7 @@ async function exportar(id: string, formato: 'pdf' | 'xlsx', viaje: boolean) {
   const secciones = await seccionesExportacion(id, viaje);
   const blob = await generarArchivo(secciones, formato);
   const nombre = `${viaje ? 'viaje' : 'movimiento'}-${id}.${formato}`;
-  if (formato === 'pdf') descargarArchivo(blob, nombre);
+  if (formato === 'pdf') await descargarArchivo(blob, nombre);
   else await compartirArchivo(blob, nombre);
 }
 export async function prepararPDF(

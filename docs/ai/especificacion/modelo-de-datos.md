@@ -7,7 +7,7 @@
 - `viajes`: id, fecha_inicio, fecha_fin|null, estado (`ABIERTO`|`CERRADO`), nota.
 - `partes` (clientes, granjas, dueños de flete): id, nombre, nombre_norm (minúsculas sin tildes, para buscar), roles[] (`CLIENTE`|`GRANJA`|`FLETE`). Se crean "al vuelo" solo con el nombre.
 - `movimientos`: id, viaje_id, tipo (`COMPRA`|`VENTA`|`FLETE`), fecha, parte_id, precios {R,P,J} en centésimas de sol por kg (opcionales), tiene_pesos_compra (bool, solo VENTA), estado (`EN_CURSO`|`TERMINADO`).
-- Extensión autorizada: `precios_completados_at` (fecha opcional) bloquea una segunda asignación de precios faltantes. Ver [ADR-002](../decisiones/002-ui-precios-y-preview-pdf.md).
+- Extensión autorizada: `precios_completados_at` (fecha opcional) conserva la última edición de precios. Se permiten cambios repetidos mientras el viaje esté abierto; ver [ADR-006](../decisiones/006-correcciones-y-nombres-descarga.md), que reemplaza el bloqueo por asignación única de ADR-002.
 - `paquetes` (un registro por jaba): id, tipo, peso_c, granja_id|null, compra_mov_id|null, venta_mov_id|null, estado (`EN_CAMION`|`EN_VENTA`|`VENDIDO`), origen (`COMPRA`|`VENTA_SIN_COMPRA`), orden_captura (secuencia entera, define el orden de las columnas).
 - `flete_lineas`: id, movimiento_id, tipo, cantidad.
 - `sync_queue`: seq autoincremental, tabla, entidad_id, operacion, intentos, ultimo_error.

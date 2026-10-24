@@ -69,6 +69,7 @@
           <PreciosMovimiento
             v-if="movimiento.tipo !== 'FLETE'"
             :movimiento="movimiento"
+            :viaje-abierto="viajeAbierto"
             :tipos-usados="[...new Set(paquetes.map((p) => p.tipo))]"
           />
         </AppCard>
@@ -222,7 +223,14 @@
             :paquetes="paquetes"
             :completo="movimiento.estado === 'TERMINADO'"
             :ultimo-id="ultimoId"
+            :editable="viajeAbierto"
+            :busy="busy"
+            :guardar="guardarCorreccion"
+            :motivo-bloqueo="motivoBloqueoPeso"
           />
+          <p v-if="viajeAbierto" class="capture-hint">
+            Toca un peso para corregirlo en su celda. Guarda o cancela el cambio antes de continuar.
+          </p>
           <table v-if="totalesPorTipo.length" class="movement-type-totals">
             <caption>
               Totales por tipo
@@ -263,6 +271,7 @@
             <PreciosMovimiento
               v-if="movimiento.tipo !== 'FLETE'"
               :movimiento="movimiento"
+              :viaje-abierto="viajeAbierto"
               :tipos-usados="[...new Set(paquetes.map((p) => p.tipo))]"
               compact
             />
@@ -273,7 +282,7 @@
           </div>
           <p class="capture-hint">Revisa el documento aquí o descarga el archivo directamente.</p>
           <AppButtonRow class="document-actions" label="Acciones">
-            <VistaPreviaPdf :id="id" /><AppButton
+            <VistaPreviaPdf :id="id" /><CompartirPdf :id="id" /><AppButton
               icon="file_download"
               label="Exportar PDF"
               :loading="exportando"
@@ -342,11 +351,12 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useTransporte } from '@/composables/useTransporte';
-import { tipos, nombres, fechaVisible, type TipoHuevo } from '@/domain/model';
+import { tipos, nombres, fechaVisible, type TipoHuevo, type Paquete } from '@/domain/model';
 import { formatPeso, medianaPorTipo, esOutlier } from '@/domain/pesos';
 import { costoPaquete, ganancia, soles } from '@/domain/ganancia';
 import {
   agregarPeso,
+  corregirPeso,
   marcarPeso,
   deshacerPeso,
   terminarMovimiento,
@@ -357,6 +367,7 @@ import TecladoPesos from '@/components/TecladoPesos.vue';
 import ResultadoGanancia from '@/components/ResultadoGanancia.vue';
 import PreciosMovimiento from '@/components/PreciosMovimiento.vue';
 import VistaPreviaPdf from '@/components/VistaPreviaPdf.vue';
+import CompartirPdf from '@/components/CompartirPdf.vue';
 const props = defineProps<{ id: string }>();
 const router = useRouter();
 const route = useRoute();
@@ -369,6 +380,29 @@ const origenMovimientos = computed(() => {
 const $q = useQuasar();
 const { data, ready, error, paquetesMovimiento, totalMovimiento } = useTransporte();
 const movimiento = computed(() => data.value.movimientos.find((m) => m.id === props.id));
+const viajeAbierto = computed(() =>
+  data.value.viajes.some((v) => v.id === movimiento.value?.viaje_id && v.estado === 'ABIERTO'),
+);
+function motivoBloqueoPeso(p: Paquete): string {
+  for (const id of [p.compra_mov_id, p.venta_mov_id].filter((id) => id !== null)) {
+    const m = data.value.movimientos.find((item) => item.id === id);
+    const viaje = data.value.viajes.find((item) => item.id === m?.viaje_id);
+    if (!m || !viaje || viaje.estado !== 'ABIERTO')
+      return 'La compra o venta pertenece a un viaje cerrado. No se puede corregir este peso.';
+  }
+  return '';
+}
+async function guardarCorreccion(p: Paquete, tipo: TipoHuevo, peso: number) {
+  if (busy.value) throw new Error('Espera a que termine la operacion actual.');
+  busy.value = true;
+  try {
+    await corregirPeso(props.id, p.id, tipo, peso);
+    ultimo.value = '';
+    ultimoId.value = p.id;
+  } finally {
+    busy.value = false;
+  }
+}
 const nombre = computed(
   () => data.value.partes.find((p) => p.id === movimiento.value?.parte_id)?.nombre ?? 'Movimiento',
 );
@@ -486,7 +520,7 @@ async function desmarcar(id: string) {
   try {
     await deshacerPeso(props.id, id);
     capturaError.value = '';
-    mensaje.value = 'Último peso deshecho.';
+    mensaje.value = 'Peso desmarcado o retirado.';
     ultimo.value = '';
     ultimoId.value = '';
   } catch (err) {

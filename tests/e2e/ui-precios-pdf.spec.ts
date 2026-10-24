@@ -16,7 +16,7 @@ async function peso(page: Page) {
   for (const key of ['1', '2', '9', '0'])
     await page.locator('.teclas').getByRole('button', { name: key, exact: true }).click();
 }
-test('UI móvil, duplicados FIFO, precios únicos en viaje cerrado y PDF visible offline', async ({
+test('UI móvil, duplicados FIFO, precios editables hasta cierre y PDF visible offline', async ({
   page,
   context,
 }) => {
@@ -105,6 +105,7 @@ test('UI móvil, duplicados FIFO, precios únicos en viaje cerrado y PDF visible
   await expect(page.locator('.mensaje')).toContainText('Ya marcaste los 2');
   await expect(page.locator('.movement-date')).toContainText('2 paq.');
   await page
+    .locator('.marked-weights')
     .getByRole('button', { name: 'Desmarcar 12.90 kg, Rosado, registro 2', exact: true })
     .click();
   await expect(
@@ -134,23 +135,48 @@ test('UI móvil, duplicados FIFO, precios únicos en viaje cerrado y PDF visible
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Confirmar venta', exact: true }).click();
   await expect(page.getByText('Terminado', { exact: true })).toBeVisible();
-  await page.goto('/#/viaje/cierre');
-  await page.getByRole('button', { name: 'Cerrar viaje', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Iniciar viaje', exact: true })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Editar 12.90 kg, Rosado, registro 1', exact: true })
+    .click();
+  await page.getByLabel('Peso corregido', { exact: true }).fill('13.90');
+  await page.getByRole('button', { name: 'Guardar peso', exact: true }).click();
+  await expect(page.locator('.weights-grand-total')).toContainText('26.80');
+  await page.goto(compraURL);
+  await expect(page.locator('.weights-grand-total')).toContainText('26.80');
+  await page
+    .getByRole('button', { name: 'Editar 13.90 kg, Rosado, registro 1', exact: true })
+    .click();
+  await page.getByLabel('Peso corregido', { exact: true }).fill('12.90');
+  await page.getByRole('button', { name: 'Guardar peso', exact: true }).click();
+  await expect(page.locator('.weights-grand-total')).toContainText('25.80');
   for (const [url, precio] of [
     [compraURL, '5.00'],
     [ventaURL, '6.00'],
   ]) {
     await page.goto(url!);
-    await page.getByRole('button', { name: 'Asignar precios faltantes' }).click();
+    await page.getByRole('button', { name: 'Editar precios', exact: true }).click();
     await page.getByLabel('Precio Rosado', { exact: true }).fill(precio!);
-    await page.getByRole('button', { name: 'Guardar precios una vez', exact: true }).click();
+    await page.getByRole('button', { name: 'Guardar precios', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByText('Precios guardados · solo lectura')).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Asignar precios faltantes' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Editar precios', exact: true }).click();
+    await page.getByLabel('Precio Rosado', { exact: true }).fill('7.00');
+    await page.getByRole('button', { name: 'Guardar precios', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Editar precios', exact: true }).click();
+    await page.getByLabel('Precio Rosado', { exact: true }).fill(precio!);
+    await page.getByRole('button', { name: 'Guardar precios', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   }
   await expect(page.locator('.resultado')).toContainText('+S/ 25.80');
+  await page.goto('/#/viaje/cierre');
+  await page.getByRole('button', { name: 'Cerrar viaje', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Iniciar viaje', exact: true })).toBeVisible();
+  for (const url of [compraURL, ventaURL]) {
+    await page.goto(url);
+    await expect(page.getByText('Viaje cerrado · precios bloqueados')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Editar precios', exact: true })).toHaveCount(0);
+  }
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
@@ -185,7 +211,10 @@ test('UI móvil, duplicados FIFO, precios únicos en viaje cerrado y PDF visible
     .toBeGreaterThan(anchoInicial * 1.9);
   const downloadEvent = page.waitForEvent('download');
   await preview.getByRole('button', { name: 'Descargar PDF', exact: true }).click();
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Venta revisada');
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   const download = await downloadEvent;
+  expect(download.suggestedFilename()).toBe('Venta revisada.pdf');
   const filePath = await download.path();
   expect((await readFile(filePath!)).subarray(0, 5).toString()).toBe('%PDF-');
   expect(await page.evaluate(() => window.nativeShareCalls)).toBe(0);
@@ -193,6 +222,8 @@ test('UI móvil, duplicados FIFO, precios únicos en viaje cerrado y PDF visible
   await expect(preview).toHaveCount(0);
   const direct = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Venta directa.pdf');
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   expect((await direct).suggestedFilename()).toMatch(/\.pdf$/);
   expect(await page.evaluate(() => window.nativeShareCalls)).toBe(0);
   expect(errors).toEqual([]);

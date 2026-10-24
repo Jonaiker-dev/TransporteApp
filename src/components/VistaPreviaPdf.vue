@@ -24,6 +24,11 @@
           @click="descargar"
           variant="primary"
           size="md"
+        /><CompartirPdf
+          :id="id"
+          :por-viaje="porViaje"
+          :archivo="archivo"
+          :disabled="!archivo"
         /><AppButton
           v-if="url"
           :href="url"
@@ -79,6 +84,7 @@
 import AppButton from '@/components/ui/AppButton.vue';
 import AppButtonRow from '@/components/ui/AppButtonRow.vue';
 import AppCard from '@/components/ui/AppCard.vue';
+import CompartirPdf from './CompartirPdf.vue';
 import { nextTick, onBeforeUnmount, ref, shallowRef } from 'vue';
 import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -186,8 +192,8 @@ function cambiarPagina(delta: number) {
   pagina.value += delta;
   void dibujar();
 }
-function descargar() {
-  if (archivo.value) descargarArchivo(archivo.value.blob, archivo.value.nombre);
+async function descargar() {
+  if (archivo.value) await descargarArchivo(archivo.value.blob, archivo.value.nombre);
 }
 function limpiar() {
   version++;

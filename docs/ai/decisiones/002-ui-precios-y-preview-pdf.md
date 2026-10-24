@@ -1,5 +1,7 @@
 # ADR-002: UI de captura, precios faltantes y vista previa PDF
 
+Actualización: las reglas de precios descritas aquí fueron reemplazadas por [ADR-006](006-correcciones-y-nombres-descarga.md). El resto se conserva como antecedente.
+
 Estado: aceptada por solicitud explícita del usuario. Sustituye la prohibición absoluta de cambiar precios de movimientos terminados únicamente para la excepción siguiente. No autoriza cambiar pesos, estados ni precios ya asignados.
 
 La referencia visual proporcionada ahora es [demo-pesos.html](../../template/demo-pesos.html). Se utiliza su organización: tipo de huevo dentro del teclado, display visible, verificación del último peso, columnas compactas, granja seleccionada, duplicados agrupados y pie con totales y una acción principal. Se conserva la paleta azul, las tarjetas y las rutas del proyecto. La demo sigue siendo referencia; no se importan sus datos ficticios ni su almacenamiento en memoria.

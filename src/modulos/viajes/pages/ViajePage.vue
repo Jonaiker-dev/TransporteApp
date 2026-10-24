@@ -72,6 +72,7 @@
         />
         <AppButtonRow class="q-mt-sm" label="Acciones">
           <VistaPreviaPdf :id="viaje.id" por-viaje />
+          <CompartirPdf :id="viaje.id" por-viaje />
           <AppButton
             label="PDF del viaje"
             :loading="exportando"
@@ -194,6 +195,7 @@ import VistaPreviaPdf from '@/components/VistaPreviaPdf.vue';
 import { useTransporte } from '@/composables/useTransporte';
 import { proyectarViaje } from '../api';
 import { reabrirViaje, respaldoViaje } from '@/repositories/transporte';
+import CompartirPdf from '@/components/CompartirPdf.vue';
 import { normalizarNombre } from '@/domain/model';
 import { soles } from '@/domain/ganancia';
 import type { Movimiento } from '../types';

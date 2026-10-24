@@ -286,8 +286,7 @@ export async function marcarPeso(
     };
   });
 }
-// Exception to read-only finished movements: missing prices may be filled once,
-// without touching existing prices, package states or the trip lifecycle.
+// Prices remain editable until the owning trip closes, including finished movements.
 export async function completarPrecios(id: string, precios: Movimiento['precios']): Promise<void> {
   const keys = Object.keys(precios);
   if (!keys.length || keys.some((key) => !tipos.includes(key as TipoHuevo)))
@@ -299,10 +298,9 @@ export async function completarPrecios(id: string, precios: Movimiento['precios'
   return atomic(async () => {
     const m = await db.movimientos.get(id);
     if (!m || m.deleted_at || m.tipo === 'FLETE') throw new Error('Compra o venta no disponible.');
-    if (m.precios_completados_at) throw new Error('Los precios faltantes ya se asignaron una vez.');
-    for (const key of keys as TipoHuevo[])
-      if (m.precios[key] !== undefined)
-        throw new Error(`El precio de ${key} ya está asignado y no se puede cambiar.`);
+    const viaje = await db.viajes.get(m.viaje_id);
+    if (!viaje || viaje.deleted_at || viaje.estado !== 'ABIERTO')
+      throw new Error('El viaje está cerrado.');
     const paquetes = active(
       await db.paquetes
         .where(m.tipo === 'COMPRA' ? 'compra_mov_id' : 'venta_mov_id')
@@ -314,6 +312,35 @@ export async function completarPrecios(id: string, precios: Movimiento['precios'
     m.precios = { ...m.precios, ...precios };
     m.precios_completados_at = new Date().toISOString();
     await guardar('movimientos', m, m.id);
+  });
+}
+export async function corregirPeso(
+  movimientoId: string,
+  paqueteId: string,
+  tipo: TipoHuevo,
+  peso_c: number,
+): Promise<void> {
+  if (!tipos.includes(tipo) || !Number.isSafeInteger(peso_c) || peso_c <= 0 || peso_c > 99999999)
+    throw new Error('Ingresa un peso mayor que cero y con dos decimales.');
+  return atomic(async () => {
+    const m = await db.movimientos.get(movimientoId);
+    if (!m || m.deleted_at || m.tipo === 'FLETE') throw new Error('Movimiento no disponible.');
+    const p = await db.paquetes.get(paqueteId);
+    if (!p || p.deleted_at) throw new Error('Paquete no disponible.');
+    if ((m.tipo === 'COMPRA' ? p.compra_mov_id : p.venta_mov_id) !== m.id)
+      throw new Error('El paquete no pertenece a este movimiento.');
+    const ids = new Set([m.id, p.compra_mov_id, p.venta_mov_id].filter((id) => id !== null));
+    for (const id of ids) {
+      const vinculado = await db.movimientos.get(id);
+      if (!vinculado || vinculado.deleted_at)
+        throw new Error('Movimiento vinculado no disponible.');
+      const viaje = await db.viajes.get(vinculado.viaje_id);
+      if (!viaje || viaje.deleted_at || viaje.estado !== 'ABIERTO')
+        throw new Error('No se puede corregir: la compra o venta pertenece a un viaje cerrado.');
+    }
+    p.tipo = tipo;
+    p.peso_c = peso_c;
+    await guardar('paquetes', p, m.id);
   });
 }
 export async function deshacerPeso(movimientoId: string, paqueteId: string): Promise<void> {

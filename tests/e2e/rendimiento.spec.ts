@@ -107,6 +107,7 @@ test('3000 paquetes y cinco movimientos conservan captura móvil acotada', async
   });
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar Excel' }).click();
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   expect((await download).suggestedFilename()).toMatch(/\.xlsx$/);
   expect(await page.evaluate(() => window.ksmTicks)).toBeGreaterThan(2);
   await page.screenshot({ path: 'test-results/rendimiento-mobile.png', fullPage: false });

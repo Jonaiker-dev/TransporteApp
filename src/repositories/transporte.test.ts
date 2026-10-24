@@ -4,6 +4,7 @@ import {
   iniciarViaje,
   crearMovimiento,
   agregarPeso,
+  corregirPeso,
   terminarMovimiento,
   cerrarViaje,
   reabrirViaje,
@@ -29,7 +30,94 @@ const venta = () =>
     tiene_pesos_compra: true,
   });
 describe('integridad de viajes e inventario', () => {
-  it('completa compra y venta una vez con movimiento y viaje cerrados, recalculando la ganancia', async () => {
+  it('corrige un peso antiguo sin cambiar ID, procedencia ni orden, y revierte si falla la cola', async () => {
+    await iniciarViaje();
+    const c = await compra();
+    const primero = await agregarPeso(c.id, 'R', 2145);
+    for (let i = 0; i < 25; i++) await agregarPeso(c.id, 'R', 2000 + i);
+    const cola = await db.sync_queue.count();
+    await corregirPeso(c.id, primero.id, 'P', 2250);
+    expect(await db.paquetes.get(primero.id)).toMatchObject({
+      id: primero.id,
+      tipo: 'P',
+      peso_c: 2250,
+      orden_captura: primero.orden_captura,
+      granja_id: primero.granja_id,
+      compra_mov_id: c.id,
+      estado: 'EN_CAMION',
+    });
+    expect(await db.sync_queue.count()).toBe(cola + 1);
+    const otro = await compra('Otra');
+    await expect(corregirPeso(otro.id, primero.id, 'R', 2000)).rejects.toThrow('no pertenece');
+    await expect(corregirPeso(c.id, primero.id, 'R', 21.45)).rejects.toThrow('dos decimales');
+    const fail = () => {
+      throw new Error('Fallo de cola');
+    };
+    db.sync_queue.hook('creating', fail);
+    await expect(corregirPeso(c.id, primero.id, 'J', 2400)).rejects.toThrow('Fallo de cola');
+    db.sync_queue.hook('creating').unsubscribe(fail);
+    expect((await db.paquetes.get(primero.id))!.peso_c).toBe(2250);
+    await terminarMovimiento(c.id);
+    await corregirPeso(c.id, primero.id, 'P', 2300);
+    const s = await venta();
+    await marcarPeso(s.id, 'P', c.parte_id, 2300);
+    await corregirPeso(s.id, primero.id, 'R', 2100);
+    await terminarMovimiento(s.id);
+    await corregirPeso(s.id, primero.id, 'R', 2200);
+    const state = await snapshot();
+    expect(state.paquetes.find((p) => p.id === primero.id)).toMatchObject({
+      peso_c: 2200,
+      estado: 'VENDIDO',
+      compra_mov_id: c.id,
+      venta_mov_id: s.id,
+    });
+    expect(state.movimientos.find((m) => m.id === c.id)!.estado).toBe('TERMINADO');
+    expect(state.movimientos.find((m) => m.id === s.id)!.estado).toBe('TERMINADO');
+    expect(ganancia(state.paquetes, state.movimientos).ganancia).toBe(2200);
+  });
+  it('corrige venta sin compra y bloquea cambios cuando el viaje está cerrado', async () => {
+    const v = await iniciarViaje();
+    const m = await crearMovimiento({
+      tipo: 'VENTA',
+      nombre: 'Sin compra',
+      fecha: '2026-10-24',
+      precios: {},
+      tiene_pesos_compra: false,
+    });
+    const p = await agregarPeso(m.id, 'R', 2000);
+    await corregirPeso(m.id, p.id, 'J', 2300);
+    expect(await db.paquetes.get(p.id)).toMatchObject({
+      peso_c: 2300,
+      tipo: 'J',
+      origen: 'VENTA_SIN_COMPRA',
+      compra_mov_id: null,
+    });
+    await terminarMovimiento(m.id);
+    await corregirPeso(m.id, p.id, 'J', 2400);
+    expect((await db.paquetes.get(p.id))!.estado).toBe('VENDIDO');
+    // Simulate a stale capture screen against a closed trip: repository must enforce the lock.
+    await db.viajes.update(v.id, { estado: 'CERRADO' });
+    await expect(corregirPeso(m.id, p.id, 'R', 2100)).rejects.toThrow('cerrado');
+  });
+  it('protege ambos viajes vinculados, incluso al reabrir la compra con la venta cerrada', async () => {
+    const vCompra = await iniciarViaje();
+    const c = await compra();
+    const p = await agregarPeso(c.id, 'R', 2000);
+    await terminarMovimiento(c.id);
+    await cerrarViaje(vCompra.id);
+    const vVenta = await iniciarViaje();
+    const s = await venta();
+    await marcarPeso(s.id, 'R', c.parte_id, 2000);
+    await terminarMovimiento(s.id);
+    const cola = await db.sync_queue.count();
+    await expect(corregirPeso(s.id, p.id, 'R', 2200)).rejects.toThrow('viaje cerrado');
+    expect(await db.sync_queue.count()).toBe(cola);
+    await cerrarViaje(vVenta.id);
+    await reabrirViaje(vCompra.id);
+    await expect(corregirPeso(c.id, p.id, 'R', 2200)).rejects.toThrow('viaje cerrado');
+    expect((await db.paquetes.get(p.id))!.peso_c).toBe(2000);
+  });
+  it('edita precios repetidamente en movimientos terminados y bloquea al cerrar el viaje', async () => {
     const v = await iniciarViaje();
     const c = await crearMovimiento({
       tipo: 'COMPRA',
@@ -48,7 +136,6 @@ describe('integridad de viajes e inventario', () => {
     });
     await marcarPeso(s.id, 'R', c.parte_id, 1290);
     await terminarMovimiento(s.id);
-    await cerrarViaje(v.id);
     let state = await snapshot();
     expect(ganancia(state.paquetes, state.movimientos).excluidos).toBe(1);
     const pending = await db.sync_queue.count();
@@ -56,14 +143,24 @@ describe('integridad de viajes e inventario', () => {
     await completarPrecios(s.id, { R: 600 });
     state = await snapshot();
     expect(ganancia(state.paquetes, state.movimientos).ganancia).toBe(1290);
-    expect(state.viajes[0]!.estado).toBe('CERRADO');
+    expect(state.viajes[0]!.estado).toBe('ABIERTO');
     expect(state.movimientos.every((m) => m.estado === 'TERMINADO')).toBe(true);
     expect(state.paquetes[0]!.estado).toBe('VENDIDO');
     expect(await db.sync_queue.count()).toBe(pending + 2);
-    await expect(completarPrecios(c.id, { P: 700 })).rejects.toThrow('ya se asignaron una vez');
+    await completarPrecios(c.id, { R: 550 });
+    await completarPrecios(s.id, { R: 650 });
     db.close();
     await db.open();
-    await expect(completarPrecios(s.id, { R: 650 })).rejects.toThrow('ya se asignaron una vez');
+    await completarPrecios(s.id, { R: 700 });
+    state = await snapshot();
+    expect(ganancia(state.paquetes, state.movimientos).ganancia).toBe(1935);
+    await cerrarViaje(v.id);
+    const cola = await db.sync_queue.count();
+    await expect(completarPrecios(c.id, { R: 600 })).rejects.toThrow('cerrado');
+    await expect(completarPrecios(s.id, { P: 700 })).rejects.toThrow('cerrado');
+    expect(await db.sync_queue.count()).toBe(cola);
+    await reabrirViaje(v.id);
+    await completarPrecios(c.id, { R: 0 });
   });
   it('conserva precios existentes incluido cero, exige los tipos usados y serializa asignaciones concurrentes', async () => {
     await iniciarViaje();
@@ -74,7 +171,7 @@ describe('integridad de viajes e inventario', () => {
       precios: { R: 0 },
     });
     await agregarPeso(c.id, 'P', 2000);
-    await expect(completarPrecios(c.id, { R: 500 })).rejects.toThrow('ya está asignado');
+    await expect(completarPrecios(c.id, { R: 500 })).rejects.toThrow('todos los tipos');
     await expect(completarPrecios(c.id, { J: 500 })).rejects.toThrow('todos los tipos');
     await expect(completarPrecios(c.id, { P: 5.55 })).rejects.toThrow('céntimos enteros');
     await expect(completarPrecios(c.id, {})).rejects.toThrow('al menos un precio');
@@ -83,9 +180,10 @@ describe('integridad de viajes e inventario', () => {
       completarPrecios(c.id, { P: 500 }),
       completarPrecios(c.id, { P: 600 }),
     ]);
-    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(2);
     expect((await db.movimientos.get(c.id))!.precios.R).toBe(0);
-    expect(await db.sync_queue.count()).toBe(pending + 1);
+    expect((await db.movimientos.get(c.id))!.precios.P).toBe(600);
+    expect(await db.sync_queue.count()).toBe(pending + 2);
   });
   it('revierte precios y permiso de asignación si falla la cola', async () => {
     await iniciarViaje();

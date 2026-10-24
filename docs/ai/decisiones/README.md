@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+[ADR-008: compartir PDF](008-compartir-pdf.md) incorpora la elección de nombre y el panel nativo para WhatsApp u otras aplicaciones, con descarga alternativa cuando no existe soporte.
+
+[ADR-007: edición de pesos en la misma celda](007-edicion-pesos-en-celda.md) permite corregir movimientos terminados mientras todos los viajes vinculados estén abiertos y sustituye el diálogo de edición.
+
+[ADR-006: correcciones y nombres de descarga](006-correcciones-y-nombres-descarga.md) sustituye el bloqueo de precios por asignación única por la edición mientras el viaje esté abierto y define la corrección de pesos específicos y los nombres editables al descargar.
+
 [ADR-005: historial y búsqueda unificada](005-historial-y-busqueda-movimientos.md) registra las consultas de todos los viajes, búsqueda por partes, tarjetas interactivas y conservación de filtros.
 
 [ADR-004: lectura local compartida](004-lectura-local-compartida.md) registra la eliminación de recargas repetidas y la actualización coherente de los movimientos.

@@ -43,10 +43,13 @@ test('flujo móvil offline: compra, ventas, flete, exportación y remanente', as
   await expect(page.getByText('Terminado', { exact: true })).toBeVisible();
   const pdfEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   expect((await pdfEvent).suggestedFilename()).toMatch(/\.pdf$/);
   const excelEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar Excel', exact: true }).click();
-  expect((await excelEvent).suggestedFilename()).toMatch(/\.xlsx$/);
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Compra revisada');
+  await page.getByRole('button', { name: 'Descargar', exact: true }).click();
+  expect((await excelEvent).suggestedFilename()).toBe('Compra revisada.xlsx');
   await page.getByRole('button', { name: 'Volver al viaje' }).click();
   await page.goto('/#/viaje/venta');
   await crearParte(page, 'Vendedor', 'Cliente Lima');
@@ -98,6 +101,7 @@ test('flujo móvil offline: compra, ventas, flete, exportación y remanente', as
   for (const formato of ['PDF', 'Excel']) {
     const descarga = page.waitForEvent('download');
     await page.getByRole('button', { name: `Exportar ${formato}`, exact: true }).click();
+    await page.getByRole('button', { name: 'Descargar', exact: true }).click();
     expect((await descarga).suggestedFilename()).toMatch(formato === 'PDF' ? /\.pdf$/ : /\.xlsx$/);
   }
   await page.goto('/#/');

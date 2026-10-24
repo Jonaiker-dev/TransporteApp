@@ -9,26 +9,19 @@
         >
       </div>
     </div>
-    <AppButton
-      v-if="puedeCompletar"
-      type="button"
-      @click="abrir"
-      variant="secondary"
-      size="md"
-      block
-    >
-      <q-icon name="edit_note" size="18px" /> Asignar precios faltantes
+    <AppButton v-if="puedeEditar" type="button" @click="abrir" variant="secondary" size="md" block>
+      <q-icon name="edit_note" size="18px" /> Editar precios
       <q-icon name="chevron_right" size="18px" />
     </AppButton>
-    <div v-else-if="movimiento.precios_completados_at" class="prices-locked">
-      <q-icon name="lock_outline" size="13px" /> Precios guardados · solo lectura
+    <div v-else class="prices-locked">
+      <q-icon name="lock_outline" size="13px" /> Viaje cerrado · precios bloqueados
     </div>
     <q-dialog v-model="dialogo" :persistent="busy">
       <AppCard class="price-dialog">
         <div class="row items-start justify-between">
           <div>
             <div class="price-eyebrow">{{ movimiento.tipo === 'COMPRA' ? 'COMPRA' : 'VENTA' }}</div>
-            <h2>Asignar precios</h2>
+            <h2>Editar precios</h2>
           </div>
           <AppButton
             icon="close"
@@ -41,15 +34,14 @@
           />
         </div>
         <p class="price-help">
-          Puedes completar los precios faltantes una sola vez, incluso si el movimiento está
-          terminado. Los que ya tienen precio se conservan.
+          Puedes cambiar los precios las veces que necesites mientras el viaje esté abierto, incluso
+          si el movimiento está terminado.
         </p>
         <form @submit.prevent="guardarPrecios">
           <div class="price-fields">
             <label v-for="t in tipos" :key="t"
               ><span>{{ nombres[t] }} <small>S/ por kg</small></span
               ><input
-                v-if="movimiento.precios[t] === undefined"
                 v-model="valores[t]"
                 :aria-label="`Precio ${nombres[t]}`"
                 type="number"
@@ -58,18 +50,15 @@
                 step="0.01"
                 placeholder="0.00"
                 :required="tiposUsados.includes(t)"
-                :disabled="busy" /><strong v-else class="existing-price"
-                >{{ soles(movimiento.precios[t]!) }}
-                <q-icon name="lock_outline" size="15px" /></strong
-            ></label>
+                :disabled="busy"
+              />
+            </label>
           </div>
-          <p class="price-confirmation">
-            Revisa antes de guardar: esta confirmación es única para el movimiento.
-          </p>
+          <p class="price-confirmation">Los totales y la ganancia se actualizarán al guardar.</p>
           <p v-if="error" role="alert" class="text-negative">{{ error }}</p>
           <AppButton
             type="submit"
-            label="Guardar precios una vez"
+            label="Guardar precios"
             :loading="busy"
             variant="primary"
             size="md"
@@ -92,18 +81,19 @@ const props = defineProps<{
   movimiento: Movimiento;
   tiposUsados: TipoHuevo[];
   compact?: boolean;
+  viajeAbierto: boolean;
 }>();
 const dialogo = ref(false);
 const busy = ref(false);
 const error = ref('');
 const valores = reactive<Record<TipoHuevo, string>>({ R: '', P: '', J: '' });
-const puedeCompletar = computed(
-  () =>
-    !props.movimiento.precios_completados_at &&
-    tipos.some((t) => props.movimiento.precios[t] === undefined),
-);
+const puedeEditar = computed(() => props.viajeAbierto);
 function abrir() {
-  for (const t of tipos) valores[t] = '';
+  for (const t of tipos)
+    valores[t] =
+      props.movimiento.precios[t] === undefined
+        ? ''
+        : (props.movimiento.precios[t] / 100).toFixed(2);
   error.value = '';
   dialogo.value = true;
 }
@@ -114,8 +104,7 @@ async function guardarPrecios() {
   try {
     const precios: Movimiento['precios'] = {};
     for (const t of tipos)
-      if (props.movimiento.precios[t] === undefined && String(valores[t]).trim())
-        precios[t] = parsePeso(String(valores[t]));
+      if (String(valores[t]).trim()) precios[t] = parsePeso(String(valores[t]));
     await completarPrecios(props.movimiento.id, precios);
     dialogo.value = false;
   } catch (err) {
