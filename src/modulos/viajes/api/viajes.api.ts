@@ -143,6 +143,35 @@ export async function getTripSummaryFromDexie(viajeId?: string): Promise<ViajeRe
   return proyectarViaje(await snapshot(), viajeId).resumen;
 }
 
+export interface MovimientoHistorial extends Movimiento {
+  parteId: string;
+  viajeId: string;
+  fechaISO: string;
+  fechaViaje: string;
+}
+
+// Reuse one index for the entire history, rather than projecting each trip.
+export function proyectarMovimientos(state: Snapshot): MovimientoHistorial[] {
+  const indice = indexar(state);
+  const viajes = new Map(state.viajes.map((v) => [v.id, v]));
+  return [...state.movimientos]
+    .sort(
+      (a, b) =>
+        b.fecha.localeCompare(a.fecha) ||
+        b.created_at.localeCompare(a.created_at) ||
+        a.id.localeCompare(b.id),
+    )
+    .map((m) => ({
+      ...adapter(m, indice),
+      parteId: m.parte_id,
+      viajeId: m.viaje_id,
+      fechaISO: m.fecha,
+      fechaViaje: viajes.has(m.viaje_id)
+        ? fechaVisible(viajes.get(m.viaje_id)!.fecha_inicio)
+        : 'Histórico',
+    }));
+}
+
 // One coherent local snapshot feeds both the list and its totals. This also
 // avoids async reloads racing to replace a newer list with an older one.
 export function proyectarViaje(state: Snapshot, viajeId?: string) {

@@ -1,5 +1,13 @@
 <template>
-  <AppCard class="movimiento-card q-mb-sm">
+  <AppCard
+    class="movimiento-card q-mb-sm"
+    role="link"
+    :tabindex="movimiento.id ? 0 : -1"
+    :aria-label="`Abrir ${movimiento.tipo} de ${movimiento.entidad}`"
+    @click="abrir"
+    @keydown.enter.prevent="abrir"
+    @keydown.space.prevent="abrir"
+  >
     <div class="row items-center justify-between q-mb-xs">
       <div class="row items-center no-wrap">
         <!-- Badge de tipo -->
@@ -37,24 +45,7 @@
         </span>
       </div>
 
-      <AppButton
-        v-if="false"
-        icon="edit"
-        aria-label="Editar flete"
-        @click="$emit('edit-flete', movimiento)"
-        variant="ghost"
-        size="md"
-        icon-only
-      />
-      <AppButton
-        v-else
-        icon="open_in_new"
-        aria-label="Abrir movimiento"
-        @click="$emit('open-movement', movimiento)"
-        variant="ghost"
-        size="md"
-        icon-only
-      />
+      <q-icon name="chevron_right" size="20px" aria-hidden="true" />
     </div>
 
     <!-- Precios de compra o venta -->
@@ -119,23 +110,32 @@
 </template>
 
 <script setup lang="ts">
-import AppButton from '@/components/ui/AppButton.vue';
 import AppCard from '@/components/ui/AppCard.vue';
 import type { Movimiento } from '../types';
 
-defineProps<{
+const props = defineProps<{
   movimiento: Movimiento;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'open-movement', movimiento: Movimiento): void;
-  (e: 'edit-flete', movimiento: Movimiento): void;
 }>();
+function abrir() {
+  if (props.movimiento.id) emit('open-movement', props.movimiento);
+}
 </script>
 
 <style scoped>
 .movimiento-card {
-  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.movimiento-card:hover,
+.movimiento-card:active {
+  border-color: var(--ksm-primary);
+}
+.movimiento-card:focus-visible {
+  outline: 3px solid var(--ksm-primary);
+  outline-offset: 3px;
 }
 
 .tipo-pill {

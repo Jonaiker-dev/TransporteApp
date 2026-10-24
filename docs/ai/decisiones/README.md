@@ -1,5 +1,7 @@
 # Decisiones de arquitectura
 
+[ADR-005: historial y búsqueda unificada](005-historial-y-busqueda-movimientos.md) registra las consultas de todos los viajes, búsqueda por partes, tarjetas interactivas y conservación de filtros.
+
 [ADR-004: lectura local compartida](004-lectura-local-compartida.md) registra la eliminación de recargas repetidas y la actualización coherente de los movimientos.
 
 [ADR-003: publicación PWA en Netlify](003-publicacion-pwa-netlify.md) registra la compilación, las cabeceras y las opciones de publicación.

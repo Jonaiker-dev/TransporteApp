@@ -2,6 +2,18 @@ import type { RouteRecordRaw } from 'vue-router';
 
 export const viajesRoutes: RouteRecordRaw[] = [
   {
+    path: '/movimientos',
+    name: 'movimientos',
+    component: () => import('../pages/MovimientosPage.vue'),
+    meta: { title: 'Movimientos | Transportes K.S.M' },
+  },
+  {
+    path: '/movimientos/buscar',
+    name: 'movimientos-buscar',
+    component: () => import('../pages/BuscarMovimientosPage.vue'),
+    meta: { title: 'Buscar movimientos | Transportes K.S.M' },
+  },
+  {
     path: '/viaje/cierre',
     name: 'viaje-cierre',
     component: () => import('../pages/CierrePage.vue'),

@@ -273,7 +273,7 @@
         <!-- 1. Inicio -->
         <AppButton
           type="button"
-          :class="{ 'is-active': currentTab === 'inicio' }"
+          :class="{ 'is-active': currentTab === 'inicio' && route.path === '/' }"
           @click="selectTab('inicio')"
           variant="ghost"
           size="lg"
@@ -285,7 +285,9 @@
         <!-- 2. Módulos -->
         <AppButton
           type="button"
-          :class="{ 'is-active': currentTab === 'modulos' }"
+          :class="{
+            'is-active': currentTab === 'modulos' || route.path.startsWith('/movimientos'),
+          }"
           aria-label="Abrir operaciones y módulos"
           @click="selectTab('modulos')"
           variant="ghost"
@@ -342,6 +344,25 @@
         </div>
 
         <div class="modules-dialog-content q-px-md q-pb-md">
+          <div class="module-section-label">CONSULTAS</div>
+          <q-list bordered separator class="module-list q-mb-md">
+            <q-item clickable v-ripple @click="navigateModule('/movimientos')">
+              <q-item-section avatar><q-icon name="history" /></q-item-section>
+              <q-item-section
+                ><q-item-label>Movimientos</q-item-label
+                ><q-item-label caption>Historial de todos los viajes</q-item-label></q-item-section
+              >
+              <q-item-section side><q-icon name="chevron_right" /></q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="navigateModule('/movimientos/buscar')">
+              <q-item-section avatar><q-icon name="search" /></q-item-section>
+              <q-item-section
+                ><q-item-label>Buscar movimientos</q-item-label
+                ><q-item-label caption>Por cliente o granja</q-item-label></q-item-section
+              >
+              <q-item-section side><q-icon name="chevron_right" /></q-item-section>
+            </q-item>
+          </q-list>
           <div class="module-section-label">OPERACIONES DEL VIAJE</div>
           <q-list bordered separator class="module-list">
             <q-item clickable v-ripple class="module-list-item" @click="navigateModule('/viaje')">

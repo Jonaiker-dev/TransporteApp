@@ -190,8 +190,11 @@
         Hay movimientos pendientes de terminar. Abre el viaje para continuar.
       </div>
       <section v-if="recientes.length" class="q-mb-lg">
-        <strong>Últimos movimientos</strong
-        ><q-list
+        <div class="row items-center justify-between q-mb-sm">
+          <strong>Últimos movimientos</strong>
+          <AppButton to="/movimientos" label="Ver historial" variant="ghost" size="md" />
+        </div>
+        <q-list
           ><q-item v-for="m in recientes" :key="m.id" clickable @click="abrirMovimiento(m)"
             ><q-item-section
               >{{ m.tipo }} · {{ data.partes.find((p) => p.id === m.parte_id)?.nombre
@@ -202,6 +205,24 @@
         ></q-list>
       </section>
       <!-- 3. SECCIÓN: VIAJES ANTERIORES -->
+      <AppButtonRow label="Consultar movimientos" class="q-mb-lg">
+        <AppButton
+          to="/movimientos"
+          label="Movimientos"
+          icon="history"
+          variant="secondary"
+          size="md"
+          block
+        />
+        <AppButton
+          to="/movimientos/buscar"
+          label="Buscar"
+          icon="search"
+          variant="secondary"
+          size="md"
+          block
+        />
+      </AppButtonRow>
       <section class="previous-trips-section q-mb-xl">
         <!-- Título y contador -->
         <div class="row items-center justify-between q-mb-xs">

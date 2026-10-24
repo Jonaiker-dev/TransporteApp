@@ -118,7 +118,6 @@
             :key="item.id ?? index"
             :movimiento="item"
             @open-movement="openMovement"
-            @edit-flete="editFreight"
           />
         </div>
       </section>
@@ -222,9 +221,6 @@ function openNewMovement() {
 }
 function openMovement(m: Movimiento) {
   if (m.id) void router.push(`/viaje/${m.tipo}/${m.id}`);
-}
-function editFreight(m: Movimiento) {
-  openMovement(m);
 }
 function cerrarViaje() {
   void router.push('/viaje/cierre');

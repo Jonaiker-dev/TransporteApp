@@ -4,7 +4,7 @@
       <nav class="capture-navigation">
         <AppButton
           icon="arrow_back"
-          aria-label="Volver al viaje"
+          :aria-label="origenMovimientos ? 'Volver a movimientos' : 'Volver al viaje'"
           :label="movimiento?.estado === 'EN_CURSO' ? undefined : 'Movimientos'"
           @click="volver"
           variant="ghost"
@@ -339,7 +339,7 @@ import AppButton from '@/components/ui/AppButton.vue';
 import AppButtonRow from '@/components/ui/AppButtonRow.vue';
 import AppCard from '@/components/ui/AppCard.vue';
 import { computed, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useTransporte } from '@/composables/useTransporte';
 import { tipos, nombres, fechaVisible, type TipoHuevo } from '@/domain/model';
@@ -359,6 +359,13 @@ import PreciosMovimiento from '@/components/PreciosMovimiento.vue';
 import VistaPreviaPdf from '@/components/VistaPreviaPdf.vue';
 const props = defineProps<{ id: string }>();
 const router = useRouter();
+const route = useRoute();
+const origenMovimientos = computed(() => {
+  const destino = route.query.volver;
+  if (typeof destino !== 'string' || !/^\/movimientos(?:\/buscar)?(?:\?|$)/.test(destino))
+    return '';
+  return destino;
+});
 const $q = useQuasar();
 const { data, ready, error, paquetesMovimiento, totalMovimiento } = useTransporte();
 const movimiento = computed(() => data.value.movimientos.find((m) => m.id === props.id));
@@ -539,6 +546,10 @@ async function cancelar() {
   }
 }
 function volver() {
+  if (origenMovimientos.value) {
+    void router.push(origenMovimientos.value);
+    return;
+  }
   void router.push({
     path: '/viaje',
     query: movimiento.value ? { id: movimiento.value.viaje_id } : {},
