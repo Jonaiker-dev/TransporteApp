@@ -184,6 +184,14 @@ export default defineConfig((/* ctx */) => {
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
       workboxMode: 'InjectManifest',
+      injectPWAMetaTags({ pwaManifest }) {
+        return (
+          `<meta name="theme-color" content="${pwaManifest.theme_color}">` +
+          '<meta name="mobile-web-app-capable" content="yes">' +
+          '<meta name="apple-mobile-web-app-status-bar-style" content="default">' +
+          '<meta name="apple-mobile-web-app-title" content="Transporte">'
+        );
+      },
       extendPWAInjectManifestOptions(cfg) {
         cfg.globPatterns = ['**/*.{css,html,ico,js,mjs,png,jpg,jpeg,svg,woff,woff2}'];
         cfg.maximumFileSizeToCacheInBytes = 5 * 1024 * 1024;
