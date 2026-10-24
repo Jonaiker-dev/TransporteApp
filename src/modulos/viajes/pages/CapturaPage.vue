@@ -513,19 +513,25 @@ async function terminar() {
   }
 }
 function confirmarCancelacion() {
+  if (busy.value) return;
   $q.dialog({
     title: 'Cancelar movimiento',
     message: 'Se desharán sus pesos y se liberarán los paquetes reservados. ¿Continuar?',
-    cancel: true,
+    ok: { label: 'Sí, cancelar movimiento' },
+    cancel: { label: 'Seguir anotando', flat: true },
+    persistent: true,
   }).onOk(() => {
     void cancelar();
   });
 }
 async function cancelar() {
+  if (busy.value) return;
+  const viajeId = movimiento.value?.viaje_id;
   busy.value = true;
+  accionError.value = '';
   try {
     await cancelarMovimiento(props.id);
-    volver();
+    await router.push({ path: '/viaje', query: viajeId ? { id: viajeId } : {} });
   } catch (err) {
     accionError.value = err instanceof Error ? err.message : 'No se pudo cancelar.';
   } finally {
