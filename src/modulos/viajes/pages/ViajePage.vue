@@ -103,7 +103,11 @@
           label="Buscar por cliente o granja"
           class="q-mb-md"
         /><!-- Si no hay movimientos -->
-        <AppCard v-if="movimientos.length === 0" class="empty-movimientos text-grey-7 text-body2">
+        <AppCard v-if="!ready" role="status">Cargando movimientos…</AppCard>
+        <AppCard
+          v-else-if="movimientos.length === 0"
+          class="empty-movimientos text-grey-7 text-body2"
+        >
           No hay movimientos en este viaje.
         </AppCard>
 
@@ -182,18 +186,18 @@
 import AppButton from '@/components/ui/AppButton.vue';
 import AppButtonRow from '@/components/ui/AppButtonRow.vue';
 import AppCard from '@/components/ui/AppCard.vue';
-import { computed, ref, reactive, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import ViajeHeaderNav from '../components/ViajeHeaderNav.vue';
 import MovimientoCard from '../components/MovimientoCard.vue';
 import ResultadoGanancia from '@/components/ResultadoGanancia.vue';
 import VistaPreviaPdf from '@/components/VistaPreviaPdf.vue';
 import { useTransporte } from '@/composables/useTransporte';
-import { listMovimientosFromDexie, getTripSummaryFromDexie } from '../api';
+import { proyectarViaje } from '../api';
 import { reabrirViaje, respaldoViaje } from '@/repositories/transporte';
 import { normalizarNombre } from '@/domain/model';
 import { soles } from '@/domain/ganancia';
-import type { Movimiento, ViajeResumen } from '../types';
+import type { Movimiento } from '../types';
 const router = useRouter();
 const route = useRoute();
 const { data, abierto, ready, error, inventario, resumenViaje } = useTransporte();
@@ -201,20 +205,9 @@ const viaje = computed(
   () => data.value.viajes.find((v) => v.id === route.query.id) ?? abierto.value,
 );
 const resultado = computed(() => resumenViaje(viaje.value?.id ?? ''));
-const movimientos = ref<Movimiento[]>([]);
-const resumen = reactive<ViajeResumen>({
-  fecha: '',
-  origen: 'Chincha',
-  destino: 'Lima',
-  estado: 'En curso',
-  compradoKg: 0,
-  compradoPaq: 0,
-  vendidoKg: 0,
-  vendidoPaq: 0,
-  enCamionKg: 0,
-  enCamionPaq: 0,
-  totalMovimientos: 0,
-});
+const vista = computed(() => proyectarViaje(data.value, viaje.value?.id));
+const movimientos = computed(() => vista.value.movimientos);
+const resumen = computed(() => vista.value.resumen);
 const chooseMovementTypeDialog = ref(false);
 const busqueda = ref('');
 const mensaje = ref('');
@@ -223,18 +216,6 @@ const filtrados = computed(() =>
   movimientos.value.filter((m) =>
     normalizarNombre(m.entidad).includes(normalizarNombre(busqueda.value)),
   ),
-);
-watch(
-  [data, viaje],
-  async () => {
-    try {
-      movimientos.value = await listMovimientosFromDexie(viaje.value?.id);
-      Object.assign(resumen, await getTripSummaryFromDexie(viaje.value?.id));
-    } catch (err) {
-      mensaje.value = err instanceof Error ? err.message : 'No se pudieron cargar los movimientos.';
-    }
-  },
-  { immediate: true },
 );
 function openNewMovement() {
   chooseMovementTypeDialog.value = true;

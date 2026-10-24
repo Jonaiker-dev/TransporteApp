@@ -62,7 +62,8 @@ test('3000 paquetes y cinco movimientos conservan captura móvil acotada', async
     }));
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open('transporteapp');
-      request.onerror = () => reject(request.error);
+      request.onerror = () =>
+        reject(new Error(request.error?.message ?? 'No se pudo abrir la base'));
       request.onsuccess = () => {
         const db = request.result;
         const tx = db.transaction(
@@ -78,11 +79,14 @@ test('3000 paquetes y cinco movimientos conservan captura móvil acotada', async
           db.close();
           resolve();
         };
-        tx.onerror = () => reject(tx.error);
+        tx.onerror = () => reject(new Error(tx.error?.message ?? 'No se pudo cargar la prueba'));
       };
     });
     return movimientos[0]!.id;
   });
+  // The fixture writes through native IndexedDB, outside Dexie's liveQuery
+  // notifications. Reopen the app so its shared reader loads that fixture.
+  await page.goto('about:blank');
   const started = Date.now();
   await page.goto(`/#/viaje/compra/${id}`);
   await expect(page.getByRole('heading', { name: 'Granja rendimiento' })).toBeVisible();

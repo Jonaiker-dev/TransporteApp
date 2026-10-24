@@ -1,5 +1,7 @@
 # Decisiones de arquitectura
 
+[ADR-004: lectura local compartida](004-lectura-local-compartida.md) registra la eliminación de recargas repetidas y la actualización coherente de los movimientos.
+
 [ADR-003: publicación PWA en Netlify](003-publicacion-pwa-netlify.md) registra la compilación, las cabeceras y las opciones de publicación.
 
 [ADR-001: adaptación al proyecto existente](001-adaptacion-proyecto-existente.md) documenta la migración local, conservación de UI, representación del histórico, pesos enteros, exportaciones y límites del respaldo remoto.
