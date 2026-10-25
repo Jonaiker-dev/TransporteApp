@@ -16,27 +16,53 @@ const error = ref('');
 const ready = ref(false);
 let consumers = 0;
 let sub: ReturnType<typeof observar> | undefined;
+let lecturaVersion = 0;
 
-export function useTransporte() {
-  consumers++;
-  sub ??= observar(
+function iniciarLectura() {
+  const version = ++lecturaVersion;
+  sub = observar(
     (state) => {
+      if (version !== lecturaVersion) return;
       data.value = state;
       ready.value = true;
       error.value = '';
     },
     (err) => {
+      if (version !== lecturaVersion) return;
       error.value = err instanceof Error ? err.message : 'No se pudo abrir la base local.';
       ready.value = true;
     },
   );
+}
+function reintentarLectura() {
+  if (!consumers) return;
+  sub?.unsubscribe();
+  error.value = '';
+  iniciarLectura();
+}
+function alVolver() {
+  if (document.visibilityState === 'visible') reintentarLectura();
+}
+export function useTransporte() {
+  consumers++;
+  if (!sub || sub.closed || error.value) {
+    sub?.unsubscribe();
+    iniciarLectura();
+  }
+  if (consumers === 1) {
+    document.addEventListener('visibilitychange', alVolver);
+    window.addEventListener('pageshow', alVolver);
+  }
   onScopeDispose(() => {
     if (--consumers === 0) {
+      lecturaVersion++;
       sub?.unsubscribe();
       sub = undefined;
       data.value = vacio();
       ready.value = false;
       error.value = '';
+      document.removeEventListener('visibilitychange', alVolver);
+      window.removeEventListener('pageshow', alVolver);
     }
   });
   const abierto = computed(() => data.value.viajes.find((v) => v.estado === 'ABIERTO'));
@@ -98,6 +124,7 @@ export function useTransporte() {
     data,
     error,
     ready,
+    reintentarLectura,
     abierto,
     stock,
     inventario,

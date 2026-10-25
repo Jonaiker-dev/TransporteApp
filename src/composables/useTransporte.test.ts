@@ -18,6 +18,36 @@ afterEach(() => {
 });
 
 describe('lectura local compartida', () => {
+  it('recupera una lectura fallida al volver a la app sin borrar la última captura', () => {
+    const unsubscribe = vi.fn();
+    vi.mocked(observar).mockReturnValue({ unsubscribe, closed: false });
+    const app = consumer();
+    const state: Snapshot = {
+      viajes: [],
+      partes: [],
+      movimientos: [],
+      paquetes: [],
+      fletes: [],
+      pendientes: 4,
+    };
+    const publicar = vi.mocked(observar).mock.calls[0]![0];
+    publicar(state);
+    vi.mocked(observar).mock.calls[0]![1](new Error('IndexedDB interrumpida'));
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    window.dispatchEvent(new Event('pageshow'));
+    visibility.mockRestore();
+    expect(observar).toHaveBeenCalledTimes(2);
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+    expect(app.state.error.value).toBe('');
+    expect(app.state.data.value).toBe(state);
+    const nuevo = { ...state, pendientes: 5 };
+    vi.mocked(observar).mock.calls[1]![0](nuevo);
+    publicar(state); // An obsolete callback must not overwrite the recovered state.
+    expect(app.state.data.value).toBe(nuevo);
+    app.scope.stop();
+    window.dispatchEvent(new Event('pageshow'));
+    expect(observar).toHaveBeenCalledTimes(2);
+  });
   it('comparte la suscripción y conserva datos al navegar entre pantallas', () => {
     const unsubscribe = vi.fn();
     vi.mocked(observar).mockReturnValue({ unsubscribe, closed: false });

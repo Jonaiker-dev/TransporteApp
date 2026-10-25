@@ -14,7 +14,8 @@ import {
 
 declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 
-void self.skipWaiting();
+// Keep the current app and its precached chunks together until its windows close.
+// A new worker waits instead of replacing the version underneath an active capture.
 clientsClaim();
 
 // Use with precache injection

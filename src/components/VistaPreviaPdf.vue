@@ -17,14 +17,7 @@
         />
       </header>
       <AppButtonRow class="pdf-toolbar" label="Acciones">
-        <AppButton
-          icon="download"
-          label="Descargar PDF"
-          :disabled="!archivo"
-          @click="descargar"
-          variant="primary"
-          size="md"
-        /><CompartirPdf
+        <ExportarPdf
           :id="id"
           :por-viaje="porViaje"
           :archivo="archivo"
@@ -84,11 +77,11 @@
 import AppButton from '@/components/ui/AppButton.vue';
 import AppButtonRow from '@/components/ui/AppButtonRow.vue';
 import AppCard from '@/components/ui/AppCard.vue';
-import CompartirPdf from './CompartirPdf.vue';
+import ExportarPdf from './ExportarPdf.vue';
 import { nextTick, onBeforeUnmount, ref, shallowRef } from 'vue';
 import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { prepararPDF, descargarArchivo } from '../services/exportaciones';
+import { prepararPDF } from '../services/exportaciones';
 const props = defineProps<{ id: string; porViaje?: boolean }>();
 const dialogo = ref(false);
 const busy = ref(false);
@@ -191,9 +184,6 @@ function cambiarPagina(delta: number) {
   if (dibujando.value) return;
   pagina.value += delta;
   void dibujar();
-}
-async function descargar() {
-  if (archivo.value) await descargarArchivo(archivo.value.blob, archivo.value.nombre);
 }
 function limpiar() {
   version++;

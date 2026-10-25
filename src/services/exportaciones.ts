@@ -62,7 +62,7 @@ function elegirNombre(
       title: 'Nombre del documento',
       message: mensaje ?? `El archivo se guardará como .${extension}`,
       prompt: {
-        model: nombre.slice(0, -(extension.length + 1)),
+        model: '',
         type: 'text',
         label: 'Nombre del documento',
         isValid: (value: string) => Boolean(nombreArchivo(value, extension)),
@@ -77,6 +77,38 @@ function elegirNombre(
 export async function descargarArchivo(blob: Blob, nombre: string): Promise<void> {
   const elegido = await elegirNombre(nombre);
   if (elegido) descargarConNombre(blob, elegido);
+}
+export function puedeCompartirPDF(blob: Blob): boolean {
+  return (
+    typeof navigator.share === 'function' &&
+    Boolean(
+      navigator.canShare?.({ files: [new File([blob], 'documento.pdf', { type: blob.type })] }),
+    )
+  );
+}
+export async function entregarPDF(blob: Blob, nombre: string, compartir = false): Promise<void> {
+  const elegido = nombreArchivo(nombre, 'pdf');
+  if (!elegido) throw new Error('Escribe el nombre del documento.');
+  if (!compartir) {
+    descargarConNombre(blob, elegido);
+    return;
+  }
+  if (!puedeCompartirPDF(blob))
+    throw new Error(
+      'Este navegador no permite compartir archivos. Puedes descargar el PDF y adjuntarlo en WhatsApp.',
+    );
+  try {
+    // Keep this call directly in the confirmation click; no generation or dialog awaits here.
+    await navigator.share({
+      files: [new File([blob], elegido, { type: blob.type })],
+      title: 'Transportes K.S.M',
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') return;
+    throw new Error('No se pudo compartir el PDF. Puedes descargarlo y adjuntarlo en WhatsApp.', {
+      cause: err,
+    });
+  }
 }
 function descargarConNombre(blob: Blob, nombre: string): void {
   const url = URL.createObjectURL(blob);

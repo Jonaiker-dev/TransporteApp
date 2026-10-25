@@ -260,7 +260,9 @@
       class="app-page-container"
       :class="{ 'app-page-container--full-screen': isFullScreenDetail }"
     >
-      <router-view />
+      <router-view #default="{ Component, route: vistaRoute }">
+        <component :is="Component" :key="vistaRoute.path" />
+      </router-view>
     </q-page-container>
 
     <!-- CINTA INFERIOR DE NAVEGACIÓN (MOBILE BOTTOM BAR) -->

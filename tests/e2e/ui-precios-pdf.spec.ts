@@ -210,7 +210,7 @@ test('UI móvil, duplicados FIFO, precios editables hasta cierre y PDF visible o
     .poll(() => preview.locator('canvas').evaluate((canvas) => canvas.clientWidth))
     .toBeGreaterThan(anchoInicial * 1.9);
   const downloadEvent = page.waitForEvent('download');
-  await preview.getByRole('button', { name: 'Descargar PDF', exact: true }).click();
+  await preview.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
   await page.getByLabel('Nombre del documento', { exact: true }).fill('Venta revisada');
   await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   const download = await downloadEvent;

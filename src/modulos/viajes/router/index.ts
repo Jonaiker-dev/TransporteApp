@@ -1,4 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router';
+import CompraDetallePage from '../pages/CompraDetallePage.vue';
+import VentaDetallePage from '../pages/VentaDetallePage.vue';
+import CapturaPage from '../pages/CapturaPage.vue';
 
 export const viajesRoutes: RouteRecordRaw[] = [
   {
@@ -22,7 +25,7 @@ export const viajesRoutes: RouteRecordRaw[] = [
   {
     path: '/viaje/flete/:id',
     name: 'viaje-flete-detalle',
-    component: () => import('../pages/CapturaPage.vue'),
+    component: CapturaPage,
     props: true,
     meta: { title: 'Detalle de flete | Transportes K.S.M', fullScreen: true },
   },
@@ -47,7 +50,7 @@ export const viajesRoutes: RouteRecordRaw[] = [
   {
     path: '/viaje/compra/:id',
     name: 'viaje-compra-detalle',
-    component: () => import('../pages/CompraDetallePage.vue'),
+    component: CompraDetallePage,
     props: true,
     meta: {
       title: 'Detalle de Compra | Transportes K.S.M',
@@ -66,7 +69,7 @@ export const viajesRoutes: RouteRecordRaw[] = [
   {
     path: '/viaje/venta/:id',
     name: 'viaje-venta-detalle',
-    component: () => import('../pages/VentaDetallePage.vue'),
+    component: VentaDetallePage,
     props: true,
     meta: {
       title: 'Detalle de Venta | Transportes K.S.M',

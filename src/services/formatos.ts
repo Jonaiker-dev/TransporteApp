@@ -1,7 +1,7 @@
 import { groupColumns, formatPeso } from '../domain/pesos';
 import { nombres, tipos, fechaVisible } from '../domain/model';
 import { costoPaquete, soles } from '../domain/ganancia';
-import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
+import type { Content, TableCell, TDocumentDefinitions } from 'pdfmake/interfaces';
 import type { SeccionExportacion } from './exportaciones';
 function importe(section: SeccionExportacion) {
   return (
@@ -81,11 +81,7 @@ export async function crearExcel(secciones: SeccionExportacion[]) {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }
-export async function crearPDF(secciones: SeccionExportacion[]): Promise<Blob> {
-  const [{ default: pdfMake }, { default: fonts }] = await Promise.all([
-    import('pdfmake/build/pdfmake'),
-    import('pdfmake/build/vfs_fonts'),
-  ]);
+export function definirPDF(secciones: SeccionExportacion[]): TDocumentDefinitions {
   const content: Content[] = [];
   for (const [index, section] of secciones.entries()) {
     const m = section.movimiento;
@@ -104,7 +100,6 @@ export async function crearPDF(secciones: SeccionExportacion[]): Promise<Blob> {
         color: '#64748b',
         margin: [0, 0, 0, 6],
       });
-    content.push({ text: `Viaje: ${m.viaje_id}\nMovimiento: ${m.id}`, fontSize: 8 });
     content.push({
       text: tipos
         .map(
@@ -138,10 +133,10 @@ export async function crearPDF(secciones: SeccionExportacion[]): Promise<Blob> {
       // At most five columns per A4 block to keep printed weights legible.
       for (let offset = 0; offset < group.columns.length; offset += 5) {
         const columns = group.columns.slice(offset, offset + 5);
-        const rows = Array.from({ length: 10 }, (_, row) =>
+        const rows: TableCell[][] = Array.from({ length: 10 }, (_, row) =>
           columns.map((c) => (c.rows[row] ? formatPeso(c.rows[row].peso_c) : '')),
         );
-        rows.push(columns.map((c) => formatPeso(c.total)));
+        rows.push(columns.map((c) => ({ text: formatPeso(c.total), bold: true })));
         content.push({
           table: { widths: columns.map(() => '*'), body: rows },
           layout: 'lightHorizontalLines',
@@ -159,6 +154,14 @@ export async function crearPDF(secciones: SeccionExportacion[]): Promise<Blob> {
     defaultStyle: { font: 'Roboto', fontSize: 10 },
     styles: { titulo: { fontSize: 17, bold: true } },
   };
+  return definition;
+}
+export async function crearPDF(secciones: SeccionExportacion[]): Promise<Blob> {
+  const [{ default: pdfMake }, { default: fonts }] = await Promise.all([
+    import('pdfmake/build/pdfmake'),
+    import('pdfmake/build/vfs_fonts'),
+  ]);
+  const definition = definirPDF(secciones);
   return new Promise((resolve) =>
     pdfMake.createPdf(definition, undefined, undefined, fonts).getBlob(resolve),
   );

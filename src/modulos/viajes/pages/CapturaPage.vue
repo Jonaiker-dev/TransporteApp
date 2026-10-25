@@ -22,9 +22,16 @@
         </div>
         <span v-else class="capture-brand">Transportes K.S.M</span>
       </nav>
-      <q-banner v-if="error || accionError" class="capture-error q-mb-md" role="alert">{{
-        error || accionError
-      }}</q-banner>
+      <q-banner v-if="error || accionError" class="capture-error q-mb-md" role="alert">
+        {{ error || accionError }}
+        <AppButton
+          v-if="error"
+          label="Reintentar"
+          variant="secondary"
+          size="md"
+          @click="reintentarLectura"
+        />
+      </q-banner>
       <div v-if="!ready" class="capture-loading">
         <q-spinner color="primary" size="28px" /> Cargando movimiento…
       </div>
@@ -282,14 +289,7 @@
           </div>
           <p class="capture-hint">Revisa el documento aquí o descarga el archivo directamente.</p>
           <AppButtonRow class="document-actions" label="Acciones">
-            <VistaPreviaPdf :id="id" /><CompartirPdf :id="id" /><AppButton
-              icon="file_download"
-              label="Exportar PDF"
-              :loading="exportando"
-              @click="exportar('pdf')"
-              variant="secondary"
-              size="md"
-            /><AppButton
+            <VistaPreviaPdf :id="id" /><ExportarPdf :id="id" /><AppButton
               v-if="movimiento.estado === 'TERMINADO'"
               label="Exportar Excel"
               :loading="exportando"
@@ -367,7 +367,7 @@ import TecladoPesos from '@/components/TecladoPesos.vue';
 import ResultadoGanancia from '@/components/ResultadoGanancia.vue';
 import PreciosMovimiento from '@/components/PreciosMovimiento.vue';
 import VistaPreviaPdf from '@/components/VistaPreviaPdf.vue';
-import CompartirPdf from '@/components/CompartirPdf.vue';
+import ExportarPdf from '@/components/ExportarPdf.vue';
 const props = defineProps<{ id: string }>();
 const router = useRouter();
 const route = useRoute();
@@ -378,7 +378,8 @@ const origenMovimientos = computed(() => {
   return destino;
 });
 const $q = useQuasar();
-const { data, ready, error, paquetesMovimiento, totalMovimiento } = useTransporte();
+const { data, ready, error, paquetesMovimiento, totalMovimiento, reintentarLectura } =
+  useTransporte();
 const movimiento = computed(() => data.value.movimientos.find((m) => m.id === props.id));
 const viajeAbierto = computed(() =>
   data.value.viajes.some((v) => v.id === movimiento.value?.viaje_id && v.estado === 'ABIERTO'),
@@ -589,7 +590,7 @@ function volver() {
     query: movimiento.value ? { id: movimiento.value.viaje_id } : {},
   });
 }
-async function exportar(formato: 'pdf' | 'xlsx') {
+async function exportar(formato: 'xlsx') {
   exportando.value = true;
   try {
     const { exportarMovimiento } = await import('@/services/exportaciones');

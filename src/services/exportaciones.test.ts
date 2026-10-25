@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import ExcelJS from 'exceljs';
-import { crearExcel, crearPDF } from './formatos';
+import { crearExcel, crearPDF, definirPDF } from './formatos';
 import type { SeccionExportacion } from './exportaciones';
 import { metadata } from '../domain/model';
 const section: SeccionExportacion = {
@@ -59,3 +59,19 @@ it('PDF A4 se genera localmente con 300 paquetes', async () => {
   const buffer = await bytes(blob);
   expect(new TextDecoder().decode(buffer.slice(0, 5))).toBe('%PDF-');
 }, 20000);
+it('PDF sin referencias internas y con los 30 subtotales de columna en negrita', () => {
+  const definition = definirPDF([section]);
+  const serialized = JSON.stringify(definition);
+  expect(serialized).not.toContain(section.movimiento.id);
+  expect(serialized).not.toContain('Viaje:');
+  expect(serialized).not.toContain('Movimiento:');
+  const blocks = definition.content as { table?: { body: unknown[][] } }[];
+  const tablas = blocks.filter((block) => block.table).map((block) => block.table!);
+  expect(tablas).toHaveLength(6);
+  for (const tabla of tablas) {
+    expect(tabla.body).toHaveLength(11);
+    expect(tabla.body.at(-1)).toEqual(
+      Array.from({ length: 5 }, () => ({ text: '214.50', bold: true })),
+    );
+  }
+});

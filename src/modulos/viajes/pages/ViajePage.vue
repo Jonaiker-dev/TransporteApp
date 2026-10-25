@@ -72,14 +72,8 @@
         />
         <AppButtonRow class="q-mt-sm" label="Acciones">
           <VistaPreviaPdf :id="viaje.id" por-viaje />
-          <CompartirPdf :id="viaje.id" por-viaje />
+          <ExportarPdf :id="viaje.id" por-viaje />
           <AppButton
-            label="PDF del viaje"
-            :loading="exportando"
-            @click="exportar('pdf')"
-            variant="secondary"
-            size="md"
-          /><AppButton
             label="Excel del viaje"
             :loading="exportando"
             @click="exportar('xlsx')"
@@ -195,7 +189,7 @@ import VistaPreviaPdf from '@/components/VistaPreviaPdf.vue';
 import { useTransporte } from '@/composables/useTransporte';
 import { proyectarViaje } from '../api';
 import { reabrirViaje, respaldoViaje } from '@/repositories/transporte';
-import CompartirPdf from '@/components/CompartirPdf.vue';
+import ExportarPdf from '@/components/ExportarPdf.vue';
 import { normalizarNombre } from '@/domain/model';
 import { soles } from '@/domain/ganancia';
 import type { Movimiento } from '../types';
@@ -236,7 +230,7 @@ async function reabrir() {
     mensaje.value = err instanceof Error ? err.message : 'No se pudo reabrir.';
   }
 }
-async function exportar(formato: 'pdf' | 'xlsx') {
+async function exportar(formato: 'xlsx') {
   if (!viaje.value) return;
   exportando.value = true;
   try {

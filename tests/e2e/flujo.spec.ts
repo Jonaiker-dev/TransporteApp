@@ -43,6 +43,8 @@ test('flujo móvil offline: compra, ventas, flete, exportación y remanente', as
   await expect(page.getByText('Terminado', { exact: true })).toBeVisible();
   const pdfEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
+  await expect(page.getByLabel('Nombre del documento', { exact: true })).toHaveValue('');
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Compra PDF');
   await page.getByRole('button', { name: 'Descargar', exact: true }).click();
   expect((await pdfEvent).suggestedFilename()).toMatch(/\.pdf$/);
   const excelEvent = page.waitForEvent('download');
@@ -101,6 +103,7 @@ test('flujo móvil offline: compra, ventas, flete, exportación y remanente', as
   for (const formato of ['PDF', 'Excel']) {
     const descarga = page.waitForEvent('download');
     await page.getByRole('button', { name: `Exportar ${formato}`, exact: true }).click();
+    await page.getByLabel('Nombre del documento', { exact: true }).fill('Documento offline');
     await page.getByRole('button', { name: 'Descargar', exact: true }).click();
     expect((await descarga).suggestedFilename()).toMatch(formato === 'PDF' ? /\.pdf$/ : /\.xlsx$/);
   }

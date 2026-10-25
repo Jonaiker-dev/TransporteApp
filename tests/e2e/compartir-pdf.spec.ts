@@ -47,8 +47,9 @@ test('comparte PDF con nombre elegido desde movimiento, vista previa y viaje', a
   await crearCompra(page);
   let descargas = 0;
   page.on('download', () => descargas++);
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
-  await page.getByLabel('Nombre del documento', { exact: true }).fill('');
+  await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Compartir PDF', exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Nombre del documento', { exact: true })).toHaveValue('');
   await expect(page.getByRole('button', { name: 'Compartir', exact: true })).toBeDisabled();
   await page.getByLabel('Nombre del documento', { exact: true }).fill('Compra WhatsApp.pdf');
   await page.getByRole('button', { name: 'Compartir', exact: true }).click();
@@ -59,30 +60,33 @@ test('comparte PDF con nombre elegido desde movimiento, vista previa y viaje', a
     ]);
 
   // Canceling the name must never invoke the native share sheet or download.
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
   await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(page.getByLabel('Nombre del documento', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => window.ksmPdfShares.length)).toBe(1);
   await page.evaluate(() => {
     window.ksmPdfShareError = 'AbortError';
   });
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Documento compartido');
   await page.getByRole('button', { name: 'Compartir', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Compartir PDF', exact: true }),
-  ).not.toHaveAttribute('aria-busy', 'true');
+  await expect(page.getByRole('button', { name: 'Exportar PDF', exact: true })).not.toHaveAttribute(
+    'aria-busy',
+    'true',
+  );
   await expect(page.getByRole('alert')).toHaveCount(0);
   await page.evaluate(() => {
     window.ksmPdfShareError = 'NotAllowedError';
   });
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Documento compartido');
   await page.getByRole('button', { name: 'Compartir', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('No se pudo compartir el PDF');
   expect(descargas).toBe(0);
   await page.evaluate(() => {
     window.ksmPdfShareError = null;
   });
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await page.getByLabel('Nombre del documento', { exact: true }).fill('Documento compartido');
   await page.getByRole('button', { name: 'Compartir', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.ksmPdfShares.length)).toBe(2);
   await expect(page.getByRole('alert')).toHaveCount(0);
@@ -90,7 +94,7 @@ test('comparte PDF con nombre elegido desde movimiento, vista previa y viaje', a
   await page.getByRole('button', { name: 'Ver PDF', exact: true }).click();
   const preview = page.getByRole('region', { name: 'Vista previa PDF', exact: true });
   await expect(preview.getByText('Página 1 de 1')).toBeVisible({ timeout: 20000 });
-  await preview.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await preview.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
   await page.getByLabel('Nombre del documento', { exact: true }).fill('Vista previa');
   await page.getByRole('button', { name: 'Compartir', exact: true }).click();
   await expect
@@ -98,7 +102,7 @@ test('comparte PDF con nombre elegido desde movimiento, vista previa y viaje', a
     .toBe('Vista previa.pdf');
   await page.getByRole('button', { name: 'Cerrar vista previa PDF', exact: true }).click();
   await page.getByRole('button', { name: 'Volver al viaje', exact: true }).click();
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
   await page.getByLabel('Nombre del documento', { exact: true }).fill('Viaje WhatsApp');
   await page.getByRole('button', { name: 'Compartir', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.ksmPdfShares.length)).toBe(4);
@@ -119,7 +123,7 @@ test('ofrece descargar con nombre elegido cuando no se admite compartir archivos
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false });
   });
   await crearCompra(page);
-  await page.getByRole('button', { name: 'Compartir PDF', exact: true }).click();
+  await page.getByRole('button', { name: 'Exportar PDF', exact: true }).click();
   await expect(
     page.getByText('Este navegador no permite compartir este archivo.', { exact: false }),
   ).toBeVisible();

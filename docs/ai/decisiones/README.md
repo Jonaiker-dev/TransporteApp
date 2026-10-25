@@ -1,5 +1,7 @@
 # Decisiones de arquitectura
 
+[ADR-009: recuperación móvil y exportación PDF](009-mobile-y-exportacion-pdf.md) refuerza apertura y retorno al detalle, conserva versiones PWA abiertas y unifica nombre vacío, descarga y compartir dentro de Exportar PDF.
+
 [ADR-008: compartir PDF](008-compartir-pdf.md) incorpora la elección de nombre y el panel nativo para WhatsApp u otras aplicaciones, con descarga alternativa cuando no existe soporte.
 
 [ADR-007: edición de pesos en la misma celda](007-edicion-pesos-en-celda.md) permite corregir movimientos terminados mientras todos los viajes vinculados estén abiertos y sustituye el diálogo de edición.
