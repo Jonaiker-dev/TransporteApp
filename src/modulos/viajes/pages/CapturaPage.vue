@@ -640,6 +640,8 @@ async function exportar(formato: 'xlsx') {
   overflow-wrap: anywhere;
 }
 .capture-brand {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 14px;
   color: var(--ksm-muted);
 }
@@ -654,6 +656,7 @@ async function exportar(formato: 'xlsx') {
 }
 .movement-heading-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }

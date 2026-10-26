@@ -194,6 +194,9 @@ function forwardAttrs() {
   gap: 0;
   flex-direction: column;
 }
+.q-btn.app-button--stack {
+  padding-inline: 4px;
+}
 .app-button--stack :deep(.q-icon) {
   font-size: $app-button-stack-icon-size;
 }

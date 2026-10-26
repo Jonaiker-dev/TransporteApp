@@ -124,6 +124,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', teclado));
 <style scoped>
 .display-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
@@ -170,9 +171,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', teclado));
   gap: 8px;
 }
 .teclas button {
-  height: var(--ksm-key-height);
+  height: max(var(--ksm-key-height), 1.6em);
   min-height: var(--ksm-key-height);
-  max-height: var(--ksm-key-height);
   min-width: var(--ksm-touch-min);
   padding: 0 8px;
   border: 1px solid var(--ksm-border);
@@ -181,7 +181,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', teclado));
   color: var(--ksm-text);
   font: inherit;
   font-size: var(--ksm-font-key);
-  line-height: 32px;
+  line-height: 1;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   touch-action: manipulation;
@@ -248,9 +248,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', teclado));
 }
 @media (max-height: 800px) {
   .teclas button {
-    height: var(--ksm-touch-min);
+    height: max(var(--ksm-touch-min), 1.6em);
     min-height: var(--ksm-touch-min);
-    max-height: var(--ksm-touch-min);
   }
 }
 </style>

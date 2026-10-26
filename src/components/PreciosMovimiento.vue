@@ -133,7 +133,7 @@ async function guardarPrecios() {
 }
 .prices-overview {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
   gap: 8px;
 }
 .prices-overview span {
@@ -190,7 +190,7 @@ async function guardarPrecios() {
 }
 .price-fields {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
   gap: 10px;
 }
 .price-fields label > span {

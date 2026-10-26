@@ -4,7 +4,7 @@
     <q-header v-if="!isFullScreenDetail" class="app-top-header text-grey-9 q-py-xs">
       <q-toolbar class="q-px-md row items-center justify-between">
         <!-- Izquierda: Logo y Nombre de la Empresa -->
-        <div class="row items-center no-wrap cursor-pointer" @click="goToHome">
+        <div class="header-brand row items-center no-wrap cursor-pointer" @click="goToHome">
           <div class="header-logo-box flex flex-center shadow-1">
             <q-icon name="local_shipping" size="22px" color="white" />
           </div>
@@ -649,6 +649,8 @@ function handleLogout() {
   color: #0f172a;
   font-size: 1.15rem;
   letter-spacing: -0.01em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Botón campana con punto rojo */
@@ -700,6 +702,13 @@ function handleLogout() {
 .mobile-bottom-bar {
   border-top: 1px solid #e2e8f0;
   box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+}
+.header-brand {
+  min-width: 0;
+  flex: 1;
+}
+.header-brand .header-logo-box {
+  flex-shrink: 0;
 }
 
 /* Estado activo de la cinta inferior */

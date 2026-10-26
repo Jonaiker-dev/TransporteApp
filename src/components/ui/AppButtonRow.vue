@@ -59,6 +59,11 @@ function measure() {
   );
   const count = Math.max(1, Math.min(buttons.length, props.maxColumns));
   columns.value = count;
+  // Navigation has a reserved 64px height in the layout and must never stack.
+  if (props.navigation) {
+    stacked.value = false;
+    return;
+  }
   const gap = parseFloat(getComputedStyle(host).columnGap) || 0;
   const available = host.clientWidth - gap * (count - 1);
   const weighted = props.layout === 'primary-first' && count === 2;
@@ -92,6 +97,7 @@ onMounted(() => {
   mutations = new MutationObserver(schedule);
   mutations.observe(row.value, { childList: true, characterData: true, subtree: true });
   measure();
+  void document.fonts.ready.then(schedule);
 });
 onBeforeUnmount(() => {
   resize?.disconnect();
@@ -140,6 +146,9 @@ onBeforeUnmount(() => {
 }
 .app-button-group--navigation {
   padding: $app-button-nav-padding 0 calc(#{$app-button-nav-padding} + env(safe-area-inset-bottom));
+}
+.app-button-group--navigation .app-button-row {
+  gap: 0;
 }
 .app-button-group--above-nav {
   bottom: calc(64px + env(safe-area-inset-bottom));

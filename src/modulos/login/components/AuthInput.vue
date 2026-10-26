@@ -146,7 +146,7 @@ function onInput(event: Event) {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.94rem;
+  font-size: max(16px, 1rem);
   color: #0f172a;
   width: 100%;
   font-family: inherit;

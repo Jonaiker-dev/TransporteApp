@@ -1,7 +1,7 @@
 <template>
   <div class="viaje-header-nav q-mb-md">
     <!-- Fila superior: Ruta y Badge 'Todo respaldado' -->
-    <div class="row items-center justify-between no-wrap q-mb-xs">
+    <div class="route-status-row row items-center justify-between q-mb-xs">
       <div class="row items-center no-wrap route-title-group">
         <span class="route-city text-weight-bolder">Chincha</span>
         <q-icon name="arrow_forward" size="20px" class="route-arrow q-mx-xs" />
@@ -46,6 +46,9 @@ withDefaults(
 </script>
 
 <style scoped>
+.route-status-row {
+  gap: 8px;
+}
 .route-city {
   font-size: 1.45rem;
   color: #0f172a;

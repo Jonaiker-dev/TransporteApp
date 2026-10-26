@@ -54,9 +54,9 @@
 
         <!-- Fila de Precios: Rosado, Pardo, Jumbo -->
         <div class="input-block q-mb-xs">
-          <div class="row q-col-gutter-sm">
+          <div class="movement-price-grid">
             <!-- Rosado S/ kg -->
-            <div class="col-4">
+            <div>
               <label
                 for="precio-rosado"
                 class="field-label block text-weight-medium text-grey-8 q-mb-xs text-caption ellipsis"
@@ -78,7 +78,7 @@
             </div>
 
             <!-- Pardo S/ kg -->
-            <div class="col-4">
+            <div>
               <label
                 for="precio-pardo"
                 class="field-label block text-weight-medium text-grey-8 q-mb-xs text-caption ellipsis"
@@ -100,7 +100,7 @@
             </div>
 
             <!-- Jumbo S/ kg -->
-            <div class="col-4">
+            <div>
               <label
                 for="precio-jumbo"
                 class="field-label block text-weight-medium text-grey-8 q-mb-xs text-caption ellipsis"

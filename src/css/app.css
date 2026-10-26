@@ -1,4 +1,13 @@
 /* app global css */
+html {
+  /* Prevent mobile text inflation; explicit accessibility text sizes still apply. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Keep scrolling in both axes, including the weight columns, without pinch zoom. */
+  touch-action: pan-x pan-y;
+  scroll-padding-block: 80px 160px;
+}
+
 :root {
   --ksm-space-1: 4px;
   --ksm-space-2: 8px;
@@ -365,4 +374,13 @@ body:is(.body--light, .body--dark) .input-block .field-label.ellipsis {
   overflow: visible;
   text-overflow: clip;
   min-height: 40px;
+}
+
+.movement-price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  gap: 12px;
+}
+.movement-price-grid > * {
+  min-width: 0;
 }
