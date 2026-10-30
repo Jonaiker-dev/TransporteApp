@@ -1,5 +1,7 @@
 # Decisiones de arquitectura
 
+[ADR-011: buscador numérico de pesos para ventas](011-buscador-pesos-venta.md) sustituye el teclado y el auto-marcado en ventas con pesos de compra por búsqueda y selección explícita.
+
 [ADR-010: pantallas compactas y escala táctil](010-pantallas-compactas-y-escala.md) adapta navegación, precios y teclado a 320–340 px y documenta el alcance del control del zoom y del ajuste de texto.
 
 [ADR-009: recuperación móvil y exportación PDF](009-mobile-y-exportacion-pdf.md) refuerza apertura y retorno al detalle, conserva versiones PWA abiertas y unifica nombre vacío, descarga y compartir dentro de Exportar PDF.

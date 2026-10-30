@@ -57,7 +57,8 @@ test('flujo móvil offline: compra, ventas, flete, exportación y remanente', as
   await crearParte(page, 'Vendedor', 'Cliente Lima');
   await page.locator('.native-price-input').first().fill('6.00');
   await page.getByRole('button', { name: 'Crear y empezar a anotar' }).click();
-  await peso(page, '2145');
+  await page.getByLabel('Buscar peso (kg)', { exact: true }).fill('21.45');
+  await page.getByRole('button', { name: 'Marcar 21.45 kg, 1 disponibles', exact: true }).click();
   await expect(page.locator('.capture-footer').getByText('Ganancia: +S/ 21.45')).toBeVisible();
   await page.getByRole('button', { name: 'Confirmar venta', exact: true }).click();
   await expect(page.getByText('Terminado', { exact: true })).toBeVisible();

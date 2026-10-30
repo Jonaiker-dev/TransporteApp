@@ -116,8 +116,78 @@
               No hay compras terminadas con stock disponible.
             </p>
           </AppCard>
+          <AppCard class="weight-type-panel" padding="none">
+            <AppButtonRow class="type-selector" label="Tipo de huevo">
+              <AppButton
+                v-for="t in tipos"
+                :key="t"
+                type="button"
+                :aria-pressed="tipo === t"
+                @click="tipo = t"
+                variant="secondary"
+                size="md"
+                :tone="t"
+                :label="conCompra ? nombres[t] : t + ' ' + nombres[t]"
+              />
+            </AppButtonRow>
+            <div class="type-counts">
+              <span v-for="t in tipos" :key="t"
+                >{{ t }}:
+                {{
+                  conCompra
+                    ? disponiblesBase.filter((p) => p.tipo === t && p.granja_id === granja).length
+                    : paquetes.filter((p) => p.tipo === t).length
+                }}
+                paq.</span
+              >
+            </div>
+          </AppCard>
+          <AppCard v-if="conCompra" class="weight-search-panel">
+            <label for="buscar-peso" class="weight-search-label">Buscar peso (kg)</label>
+            <div class="weight-search-field">
+              <q-icon name="search" size="24px" aria-hidden="true" />
+              <input
+                id="buscar-peso"
+                ref="busquedaPeso"
+                :value="prefijo"
+                @input="filtrarPeso"
+                @keydown.enter.prevent
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                :disabled="busy"
+                placeholder="Ej. 21.45"
+                aria-describedby="buscar-peso-ayuda"
+                aria-controls="pesos-disponibles"
+              />
+              <AppButton
+                icon="close"
+                aria-label="Limpiar búsqueda de pesos"
+                :disabled="busy || !prefijo"
+                @click="limpiarBusqueda"
+                variant="ghost"
+                size="md"
+                icon-only
+              />
+            </div>
+            <p id="buscar-peso-ayuda" class="capture-hint">
+              Escribe el inicio del peso y toca un resultado para marcarlo.
+            </p>
+            <p v-if="capturaError" class="search-error" role="alert">{{ capturaError }}</p>
+            <p v-if="mensaje" class="search-feedback" role="status">{{ mensaje }}</p>
+            <AppButton
+              v-if="marcados.length"
+              icon="undo"
+              label="Deshacer último"
+              :disabled="busy"
+              @click="deshacer"
+              variant="ghost"
+              size="md"
+              block
+            />
+          </AppCard>
           <TecladoPesos
-            :marcar="conCompra"
+            v-else
             :etiqueta="nombres[tipo]"
             :busy="busy"
             :error="capturaError"
@@ -126,35 +196,47 @@
             @input="prefijo = $event"
             @submit="registrar"
             @undo="deshacer"
-          >
-            <template #tipos
-              ><AppButtonRow class="type-selector" label="Tipo de huevo">
-                <AppButton
-                  v-for="t in tipos"
-                  :key="t"
-                  type="button"
-                  :aria-pressed="tipo === t"
-                  @click="tipo = t"
-                  variant="secondary"
-                  size="md"
-                  :tone="t"
-                  :label="t + ' ' + nombres[t]"
-                ></AppButton>
-              </AppButtonRow>
-              <div class="type-counts">
-                <span v-for="t in tipos" :key="t"
-                  >{{ t }}:
-                  {{
-                    conCompra
-                      ? disponiblesBase.filter((p) => p.tipo === t && p.granja_id === granja).length
-                      : paquetes.filter((p) => p.tipo === t).length
-                  }}
-                  paq.</span
-                >
-              </div></template
-            >
-          </TecladoPesos>
+          />
           <template v-if="conCompra">
+            <AppCard class="capture-panel available-panel q-mt-md" tag="section">
+              <div class="section-heading">
+                <h2>{{ nombres[tipo] }} disponibles</h2>
+                <span role="status" aria-live="polite"
+                  >{{ disponibles.reduce((sum, p) => sum + p.cantidad, 0) }} paq.</span
+                >
+              </div>
+              <p class="capture-hint">
+                «×2» son dos paquetes del mismo peso. Cada toque marca uno, primero el de la compra
+                más antigua.
+              </p>
+              <q-virtual-scroll
+                id="pesos-disponibles"
+                v-if="disponibles.length"
+                :items="filasDisponibles"
+                :virtual-scroll-item-size="112"
+                class="disponibles"
+                #default="{ item, index }"
+                ><AppButtonRow :key="index" class="available-row" label="Acciones" :max-columns="2">
+                  <AppButton
+                    v-for="p in item"
+                    :key="p.peso_c"
+                    type="button"
+                    :aria-label="`Marcar ${formatPeso(p.peso_c)} kg, ${p.cantidad} disponibles`"
+                    :disabled="busy"
+                    @click="registrar(p.peso_c)"
+                    variant="secondary"
+                    size="md"
+                    :label="formatPeso(p.peso_c) + ' ×' + p.cantidad"
+                  ></AppButton> </AppButtonRow
+              ></q-virtual-scroll>
+              <div v-else id="pesos-disponibles" class="empty-weights">
+                {{
+                  prefijo
+                    ? `Sin coincidencias con «${prefijo}…».`
+                    : 'No quedan pesos de este tipo en la granja seleccionada.'
+                }}
+              </div>
+            </AppCard>
             <AppCard v-if="marcados.length" class="capture-panel q-mt-md" tag="section">
               <div class="section-heading">
                 <h2>Marcados en esta venta</h2>
@@ -176,42 +258,6 @@
                   ><span>{{ nombres[p.tipo] }} <q-icon name="close" size="12px" /></span>
                 </AppButton>
               </AppButtonRow>
-            </AppCard>
-            <AppCard class="capture-panel available-panel q-mt-md" tag="section">
-              <div class="section-heading">
-                <h2>{{ nombres[tipo] }} disponibles</h2>
-                <span>{{ disponibles.reduce((sum, p) => sum + p.cantidad, 0) }} paq.</span>
-              </div>
-              <p class="capture-hint">
-                «×2» son dos paquetes del mismo peso. Cada toque marca uno, primero el de la compra
-                más antigua.
-              </p>
-              <q-virtual-scroll
-                v-if="disponibles.length"
-                :items="filasDisponibles"
-                :virtual-scroll-item-size="112"
-                class="disponibles"
-                #default="{ item, index }"
-                ><AppButtonRow :key="index" class="available-row" label="Acciones" :max-columns="2">
-                  <AppButton
-                    v-for="p in item"
-                    :key="p.peso_c"
-                    type="button"
-                    :aria-label="`Marcar ${formatPeso(p.peso_c)} kg, ${p.cantidad} disponibles`"
-                    :disabled="busy"
-                    @click="registrar(p.peso_c)"
-                    variant="secondary"
-                    size="md"
-                    :label="formatPeso(p.peso_c) + ' ×' + p.cantidad"
-                  ></AppButton> </AppButtonRow
-              ></q-virtual-scroll>
-              <div v-else class="empty-weights">
-                {{
-                  prefijo
-                    ? `Sin coincidencias con «${prefijo}…».`
-                    : 'No quedan pesos de este tipo en la granja seleccionada.'
-                }}
-              </div>
             </AppCard>
           </template>
         </template>
@@ -430,6 +476,20 @@ const resultado = computed(() => ganancia(paquetes.value, data.value.movimientos
 const tipo = ref<TipoHuevo>('R');
 const granja = ref('');
 const prefijo = ref('');
+const busquedaPeso = ref<HTMLInputElement>();
+function limpiarBusqueda() {
+  prefijo.value = '';
+  busquedaPeso.value?.focus();
+}
+function filtrarPeso(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const [enteros = '', ...decimales] = input.value
+    .replace(/[^\d.,]/g, '')
+    .replaceAll(',', '.')
+    .split('.');
+  prefijo.value = enteros + (decimales.length ? `.${decimales.join('').slice(0, 2)}` : '');
+  input.value = prefijo.value;
+}
 
 const busy = ref(false);
 const capturaError = ref('');
@@ -760,6 +820,55 @@ async function exportar(formato: 'xlsx') {
 }
 .disponibles {
   max-height: 216px;
+}
+.weight-search-panel {
+  margin-top: 8px;
+}
+.weight-search-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.weight-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border: 1px solid var(--ksm-border);
+  border-radius: var(--ksm-radius-control);
+  background: var(--ksm-soft);
+  color: var(--ksm-muted);
+}
+.weight-search-field:focus-within {
+  outline: 2px solid var(--ksm-primary);
+  outline-offset: 2px;
+}
+.weight-search-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--ksm-text);
+  font: inherit;
+  font-size: max(16px, 1rem);
+  font-variant-numeric: tabular-nums;
+}
+.weight-search-field input:focus-visible {
+  outline: none;
+}
+.search-feedback,
+.search-error {
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.search-feedback {
+  color: var(--ksm-positive);
+}
+.search-error {
+  color: var(--ksm-negative);
 }
 .marked-weights strong {
   display: block;

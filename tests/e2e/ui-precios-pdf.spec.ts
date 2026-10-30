@@ -86,7 +86,9 @@ test('UI móvil, duplicados FIFO, precios editables hasta cierre y PDF visible o
   await page.getByRole('button', { name: 'Crear y empezar a anotar' }).click();
   await expect(page.getByRole('heading', { name: 'Cliente duplicados' })).toBeVisible();
   const ventaURL = page.url();
-  const marcar = await page.locator('.teclas .add-key').boundingBox();
+  await expect(page.locator('.teclas')).toHaveCount(0);
+  const buscarPeso = page.getByLabel('Buscar peso (kg)', { exact: true });
+  const marcar = await buscarPeso.boundingBox();
   const ventaFooter = await page.locator('.capture-footer').boundingBox();
   expect(marcar!.y + marcar!.height).toBeLessThanOrEqual(ventaFooter!.y);
   const repetido = page.getByRole('button', {
@@ -98,11 +100,12 @@ test('UI móvil, duplicados FIFO, precios editables hasta cierre y PDF visible o
   await expect(
     page.getByRole('button', { name: 'Marcar 12.90 kg, 1 disponibles', exact: true }),
   ).toBeVisible();
-  await peso(page);
-  await expect(page.locator('.mensaje')).toContainText('Ya van 2 de 12.90 kg');
+  await buscarPeso.fill('12.90');
+  await expect(page.locator('.movement-date')).toContainText('1 paq.');
+  await page.getByRole('button', { name: 'Marcar 12.90 kg, 1 disponibles', exact: true }).click();
+  await expect(page.locator('.search-feedback')).toContainText('Ya van 2 de 12.90 kg');
   await expect(page.locator('.movement-date')).toContainText('2 paq.');
-  await peso(page);
-  await expect(page.locator('.mensaje')).toContainText('Ya marcaste los 2');
+  await expect(page.getByRole('button', { name: /^Marcar .* kg,/ })).toHaveCount(0);
   await expect(page.locator('.movement-date')).toContainText('2 paq.');
   await page
     .locator('.marked-weights')
@@ -119,13 +122,16 @@ test('UI móvil, duplicados FIFO, precios editables hasta cierre y PDF visible o
   await page.evaluate(() => localStorage.setItem('ksm-dark', 'true'));
   await page.reload();
   await expect(page.locator('body')).toHaveClass(/body--dark/);
-  await expect(page.locator('.teclas button').first()).toHaveCSS(
+  await expect(page.locator('.weight-search-field')).toHaveCSS(
     'background-color',
     'rgb(41, 53, 72)',
   );
-  await expect(page.locator('.teclas button').first()).toHaveCSS('color', 'rgb(249, 250, 251)');
+  await expect(page.getByLabel('Buscar peso (kg)', { exact: true })).toHaveCSS(
+    'color',
+    'rgb(249, 250, 251)',
+  );
   await page.evaluate(() => window.scrollTo(0, 0));
-  const marcarCompacto = await page.locator('.teclas .add-key').boundingBox();
+  const marcarCompacto = await page.getByLabel('Buscar peso (kg)', { exact: true }).boundingBox();
   const footerCompacto = await page.locator('.capture-footer').boundingBox();
   expect(marcarCompacto!.y + marcarCompacto!.height).toBeLessThanOrEqual(footerCompacto!.y);
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 360);

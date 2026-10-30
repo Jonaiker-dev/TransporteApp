@@ -48,7 +48,7 @@ test('cancelar movimientos pide confirmación, conserva al desistir y libera el 
   await page.getByRole('button', { name: 'Terminar compra', exact: true }).click();
   await expect(page.getByText('Terminado', { exact: true })).toBeVisible();
   await crearMovimiento(page, 'venta', 'Venta por error');
-  await registrarPeso(page);
+  await page.getByRole('button', { name: 'Marcar 21.45 kg, 1 disponibles', exact: true }).click();
   await page.getByRole('button', { name: 'Cancelar movimiento', exact: true }).click();
   await dialogo.getByRole('button', { name: 'Sí, cancelar movimiento', exact: true }).click();
   await expect(page).toHaveURL(/#\/viaje\?id=/);
@@ -57,7 +57,7 @@ test('cancelar movimientos pide confirmación, conserva al desistir y libera el 
 
   await page.reload();
   await crearMovimiento(page, 'venta', 'Venta correcta');
-  await registrarPeso(page);
+  await page.getByRole('button', { name: 'Marcar 21.45 kg, 1 disponibles', exact: true }).click();
   await page.getByRole('button', { name: 'Confirmar venta', exact: true }).click();
   await expect(page.getByText('Terminado', { exact: true })).toBeVisible();
   expect(errores).toEqual([]);
